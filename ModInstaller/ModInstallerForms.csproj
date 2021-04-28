@@ -34,6 +34,7 @@
         <ApplicationIcon>zote_circle_aSZ_icon.ico</ApplicationIcon>
     </PropertyGroup>
     
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
     <ItemGroup>
         <Reference Include="System.IO.Compression" />
         <Reference Include="System.Data.DataSetExtensions" />

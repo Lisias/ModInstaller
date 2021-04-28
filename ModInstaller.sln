@@ -1,6 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModInstaller", "ModInstaller\ModInstaller.csproj", "{B2643F2F-418A-448E-875F-9D07D4780F3C}"
+# Visual Studio Version 16
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModInstallerForms", "ModInstaller\ModInstallerForms.csproj", "{B2643F2F-418A-448E-875F-9D07D4780F3C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

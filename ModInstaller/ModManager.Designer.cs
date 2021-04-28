@@ -115,9 +115,6 @@ namespace ModInstaller
             this.ControlBox = true;
         }
 
-        
-
-
         #endregion
 
         private OpenFileDialog openFileDialog;

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Windows.Forms;
 
 // ReSharper disable LocalizableElement
@@ -10,9 +8,6 @@ namespace ModInstaller
 {
     public partial class ManualPathLocation : Form
     {
-        [SuppressMessage("ReSharper", "InconsistentNaming")]
-        private readonly string currOS;
-
         public ManualPathLocation()
         {
             InitializeComponent();
@@ -20,7 +15,6 @@ namespace ModInstaller
 
         public ManualPathLocation(string os)
         {
-            currOS = os;
             InitializeComponent();
         }
 
@@ -31,14 +25,9 @@ namespace ModInstaller
             
             if (!string.IsNullOrEmpty(folderBrowserDialog1.SelectedPath))
             {
-                if (ModManager.PathCheck(currOS, folderBrowserDialog1))
+                if (Manager.PathCheck(folderBrowserDialog1.SelectedPath))
                 {
-                    Properties.Settings.Default.installFolder = folderBrowserDialog1.SelectedPath;
-                    Properties.Settings.Default.APIFolder = ModManager.OSPath(currOS);
-                    Properties.Settings.Default.modFolder = $@"{Properties.Settings.Default.APIFolder}/Mods";
-                    Properties.Settings.Default.Save();
-                    if (!Directory.Exists(Properties.Settings.Default.modFolder))
-                        Directory.CreateDirectory(Properties.Settings.Default.modFolder);
+                    Manager.Instance.SetInstallationPath(folderBrowserDialog1.SelectedPath);
                     MessageBox.Show($"Hollow Knight installation path:\n{Properties.Settings.Default.installFolder}");
                     Close();
                 }
@@ -51,5 +40,5 @@ namespace ModInstaller
             else
                 MessageBox.Show("Please select your installation folder to proceed.");
         }
-    }
+   }
 }

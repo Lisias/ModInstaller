@@ -11,7 +11,7 @@ namespace ModInstaller
     {
         private void EnableApiClick(object sender, EventArgs e)
         {
-            if (!_vanillaEnabled)
+            if (Manager.Instance.VanillaEnabled)
             {
                 DialogResult result = MessageBox.Show
                 (
@@ -20,23 +20,9 @@ namespace ModInstaller
                     MessageBoxButtons.YesNo
                 );
                 if (result != DialogResult.Yes) return;
-                if (File.Exists($"{Properties.Settings.Default.APIFolder}/Assembly-CSharp.vanilla"))
-                {
-                    File.Copy
-                    (
-                        $"{Properties.Settings.Default.APIFolder}/Assembly-CSharp.dll",
-                        $"{Properties.Settings.Default.APIFolder}/Assembly-CSharp.mod",
-                        true
-                    );
-                    File.Copy
-                    (
-                        $"{Properties.Settings.Default.APIFolder}/Assembly-CSharp.vanilla",
-                        $"{Properties.Settings.Default.APIFolder}/Assembly-CSharp.dll",
-                        true
-                    );
-                    _assemblyIsAPI = false;
+
+                if (Manager.Instance.SetVanillaApi())
                     MessageBox.Show("Successfully disabled all installed mods!");
-                }
                 else
                 {
                     MessageBox.Show("Unable to locate vanilla Hollow Knight.\nPlease verify integrity of game files and relaunch this installer.");
@@ -53,31 +39,16 @@ namespace ModInstaller
                     MessageBoxButtons.YesNo
                 );
                 if (result != DialogResult.Yes) return;
-                if (File.Exists($"{Properties.Settings.Default.APIFolder}/Assembly-CSharp.mod"))
-                {
-                    File.Copy
-                    (
-                        $"{Properties.Settings.Default.APIFolder}/Assembly-CSharp.dll",
-                        $"{Properties.Settings.Default.APIFolder}/Assembly-CSharp.vanilla",
-                        true
-                    );
-                    File.Copy
-                    (
-                        $"{Properties.Settings.Default.APIFolder}/Assembly-CSharp.mod",
-                        $"{Properties.Settings.Default.APIFolder}/Assembly-CSharp.dll",
-                        true
-                    );
-                    _assemblyIsAPI = true;
+
+                if (Manager.Instance.SetCustomApi())
                     MessageBox.Show("Successfully enabled all installed mods!");
-                }
                 else
                 {
                     MessageBox.Show("Unable to locate vanilla Hollow Knight. Please verify integrity of game files.");
                 }
             }
 
-            _vanillaEnabled = !_vanillaEnabled;
-            button1.Text = _vanillaEnabled
+            button1.Text = Manager.Instance.VanillaEnabled
                 ? "Enable Modding API"
                 : "Revert Back To Unmodded";
         }
@@ -98,14 +69,9 @@ namespace ModInstaller
             
             if (string.IsNullOrEmpty(folderBrowserDialog1.SelectedPath)) return;
             
-            if (PathCheck(OS, folderBrowserDialog1))
+            if (Manager.PathCheck(folderBrowserDialog1.SelectedPath))
             {
-                Properties.Settings.Default.installFolder = folderBrowserDialog1.SelectedPath;
-                Properties.Settings.Default.APIFolder = OSPath(OS);
-                Properties.Settings.Default.modFolder = $"{Properties.Settings.Default.APIFolder}/Mods";
-                Properties.Settings.Default.Save();
-                if (!Directory.Exists(Properties.Settings.Default.modFolder))
-                    Directory.CreateDirectory(Properties.Settings.Default.modFolder);
+                Manager.Instance.SetInstallationPath(folderBrowserDialog1.SelectedPath);
                 MessageBox.Show($"Hollow Knight installation path:\n{Properties.Settings.Default.installFolder}");
             }
             else
@@ -125,7 +91,7 @@ namespace ModInstaller
             {
                 if (Path.GetExtension(mod) == ".zip")
                 {
-                    InstallMods(mod, Properties.Settings.Default.temp, true);
+                    Manager.Instance.InstallMods(mod, Properties.Settings.Default.temp, true);
                 }
                 else
                 {
@@ -139,25 +105,7 @@ namespace ModInstaller
         private void ManualPathClosed(object sender, FormClosedEventArgs e)
         {
             Show();
-            if (Directory.Exists("/tmp"))
-            {
-                if (Directory.Exists("/tmp/HKmodinstaller"))
-                {
-                    DeleteDirectory("/tmp/HKmodinstaller");
-                }
-
-                Directory.CreateDirectory("/tmp/HKmodinstaller");
-                Properties.Settings.Default.temp = "/tmp/HKmodinstaller";
-            }
-            else
-            {
-                Properties.Settings.Default.temp =
-                    Directory.Exists($"{Path.GetPathRoot(Properties.Settings.Default.installFolder)}temp")
-                        ? $"{Path.GetPathRoot(Properties.Settings.Default.installFolder)}tempMods"
-                        : $"{Path.GetPathRoot(Properties.Settings.Default.installFolder)}temp";
-            }
-
-            Properties.Settings.Default.Save();
+            Manager.CheckTemporary();
         }
 
         private void DonateButtonClick(object sender, EventArgs e)
