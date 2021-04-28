@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModInstallerForms", "ModInstallerForms\ModInstallerForms.csproj", "{B2643F2F-418A-448E-875F-9D07D4780F3C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModInstallerForms", "ModInstallerForms\ModInstallerForms.csproj", "{3BD853FA-C9EC-4F2D-BB20-A6FC62F5B0AF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModInstallerGTK", "ModInstallerGTK\ModInstallerGTK.csproj", "{9E35E477-1BE3-476E-BEA0-6D0243DB8C32}"
 EndProject
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{B2643F2F-418A-448E-875F-9D07D4780F3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B2643F2F-418A-448E-875F-9D07D4780F3C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B2643F2F-418A-448E-875F-9D07D4780F3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B2643F2F-418A-448E-875F-9D07D4780F3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BD853FA-C9EC-4F2D-BB20-A6FC62F5B0AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BD853FA-C9EC-4F2D-BB20-A6FC62F5B0AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BD853FA-C9EC-4F2D-BB20-A6FC62F5B0AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BD853FA-C9EC-4F2D-BB20-A6FC62F5B0AF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9E35E477-1BE3-476E-BEA0-6D0243DB8C32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9E35E477-1BE3-476E-BEA0-6D0243DB8C32}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9E35E477-1BE3-476E-BEA0-6D0243DB8C32}.Release|Any CPU.ActiveCfg = Release|Any CPU

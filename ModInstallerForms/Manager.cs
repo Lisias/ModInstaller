@@ -550,7 +550,9 @@ namespace ModInstaller
 				if (this.InstalledMods.Contains(dependency))
 					continue;
 
-				var dependencyMod = this.ModEntries.First(dep => dep.Name == dependency);
+				ModEntry dependencyMod = this.ModEntries.First(dep => dep.Name == dependency);
+				if (null == dependencyMod)
+					throw new FileNotFoundException($"Could not find \"{dependency}\" which is required to run \"{mod.Name}\"!\r\nYou may need to install \"{dependency}\" manually.");
 
 				Install(dependency, true, false, true, dependencyMod, callback);
 			}
