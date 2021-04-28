@@ -4,16 +4,11 @@ using System.Windows.Forms;
 // ReSharper disable LocalizableElement
 // ReSharper disable BuiltInTypeReferenceStyle
 
-namespace ModInstaller
+namespace ModInstaller.FormsUI
 {
     public partial class ManualPathLocation : Form
     {
         public ManualPathLocation()
-        {
-            InitializeComponent();
-        }
-
-        public ManualPathLocation(string os)
         {
             InitializeComponent();
         }
@@ -25,7 +20,7 @@ namespace ModInstaller
             
             if (!string.IsNullOrEmpty(folderBrowserDialog1.SelectedPath))
             {
-                if (Manager.PathCheck(folderBrowserDialog1.SelectedPath))
+                if (Manager.Instance.PathCheck(folderBrowserDialog1.SelectedPath))
                 {
                     Manager.Instance.SetInstallationPath(folderBrowserDialog1.SelectedPath);
                     MessageBox.Show($"Hollow Knight installation path:\n{Properties.Settings.Default.installFolder}");

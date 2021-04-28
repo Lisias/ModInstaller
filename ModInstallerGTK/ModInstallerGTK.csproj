@@ -58,5 +58,11 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ModInstaller\ModInstaller.csproj">
+      <Project>{D4958B6E-3FEF-47F6-B47E-D64CF35DF9E8}</Project>
+      <Name>ModInstaller</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

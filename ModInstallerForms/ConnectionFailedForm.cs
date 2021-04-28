@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace ModInstaller
+namespace ModInstaller.FormsUI
 {
     public partial class ConnectionFailedForm : Form
     {

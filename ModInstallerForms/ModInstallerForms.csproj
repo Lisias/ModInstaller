@@ -23,6 +23,7 @@
         <Copyright>Copyright © 2018</Copyright>
         <OutputPath>bin\$(Configuration)\</OutputPath>
         <LangVersion>latest</LangVersion>
+        <RootNamespace>ModInstallerForms.FormsUI</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -100,5 +101,8 @@
             <DependentUpon>Settings.settings</DependentUpon>
             <DesignTimeSharedInput>True</DesignTimeSharedInput>
         </Compile>
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\ModInstaller\ModInstaller.csproj" />
     </ItemGroup>
 </Project>

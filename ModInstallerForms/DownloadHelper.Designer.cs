@@ -1,4 +1,4 @@
-﻿namespace ModInstaller
+﻿namespace ModInstaller.FormsUI
 {
     partial class DownloadHelper
     {

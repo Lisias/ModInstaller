@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Windows.Forms;
 
-namespace ModInstaller
+namespace ModInstaller.FormsUI
 {
     public partial class DownloadHelper : Form
     {

@@ -5,7 +5,7 @@ using System.IO;
 using System.Windows.Forms;
 // ReSharper disable LocalizableElement
 
-namespace ModInstaller
+namespace ModInstaller.FormsUI
 {
     public partial class ModManager
     {
@@ -69,7 +69,7 @@ namespace ModInstaller
             
             if (string.IsNullOrEmpty(folderBrowserDialog1.SelectedPath)) return;
             
-            if (Manager.PathCheck(folderBrowserDialog1.SelectedPath))
+            if (Manager.Instance.PathCheck(folderBrowserDialog1.SelectedPath))
             {
                 Manager.Instance.SetInstallationPath(folderBrowserDialog1.SelectedPath);
                 MessageBox.Show($"Hollow Knight installation path:\n{Properties.Settings.Default.installFolder}");
@@ -105,7 +105,7 @@ namespace ModInstaller
         private void ManualPathClosed(object sender, FormClosedEventArgs e)
         {
             Show();
-            Manager.CheckTemporary();
+            Manager.Instance.CheckTemporary();
         }
 
         private void DonateButtonClick(object sender, EventArgs e)
