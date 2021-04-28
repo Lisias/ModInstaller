@@ -24,6 +24,7 @@ namespace ModInstaller
 
 		public interface InstallResultListener
 		{
+			void Download(Uri uri, string path, string name);
 			void InstalledWithSuccess(string modname);
 			void UpdatedWithSuccess(string modname);
 			void UninstalledWithSuccess(string modname);
@@ -269,7 +270,7 @@ namespace ModInstaller
 			throw new VerificationException("Please purchase the game before attempting to play it.");
 		}
 
-		public bool CheckApiInstalled()
+		public bool CheckApiInstalled(InstallResultListener callback)
 		{
 			if (!Directory.Exists(Properties.Settings.Default.APIFolder))
 			{
@@ -322,7 +323,7 @@ namespace ModInstaller
 
 			if (!this.ApiIsInstalled || this.AssemblyIsAPI && !SHA1Equals($"{Properties.Settings.Default.APIFolder}/Assembly-CSharp.dll", _apiSha1))
 			{
-				Download
+				callback.Download
 				(
 					new Uri(_apiLink),
 					$"{Properties.Settings.Default.installFolder}/Modding API.zip",
@@ -535,17 +536,11 @@ namespace ModInstaller
 
 		#region Downloading and installing
 
-		private static void Download(Uri uri, string path, string name)
-		{
-			var download = new DownloadHelper(uri, path, name);
-			download.ShowDialog();
-		}
-
 		public void InstallDependencies(Mod mod, InstallResultListener callback)
 		{
 			if (!mod.Dependencies.Any()) return;
 
-			CheckApiInstalled();
+			CheckApiInstalled(callback);
 
 			foreach (string dependency in mod.Dependencies)
 			{
@@ -565,7 +560,7 @@ namespace ModInstaller
 		{
 			if (isInstall)
 			{
-				Download
+				callback.Download
 				(
 					new Uri(this.modsList.First(m => m.Name == modname).Link),
 					$"{Properties.Settings.Default.modFolder}/{modname}.zip",

@@ -42,7 +42,7 @@ namespace ModInstaller
 			try
 			{
 				Manager.PiracyCheck();
-				if (Manager.Instance.CheckApiInstalled())
+				if (Manager.Instance.CheckApiInstalled(this))
 					MessageBox.Show("Modding API successfully installed!");
                 Manager.Instance.CheckLocalInstallation(this);
 			}
@@ -435,6 +435,12 @@ namespace ModInstaller
 			};
 			entry.Name.Text = e.Name;
 			return entry;
+		}
+
+		void Manager.InstallResultListener.Download(Uri uri, string path, string name)
+		{
+			var download = new DownloadHelper(uri, path, name);
+			download.ShowDialog();
 		}
 	}
 }
