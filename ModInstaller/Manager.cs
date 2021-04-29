@@ -98,7 +98,8 @@ namespace ModInstaller
 
 		#region Initialization and Self Update.
 
-		public static void CheckUpdate()
+		// FIXME : Code a first install, preserving the original Assembly-CSharp.dll into Assembly-CSharp.dll.vanilla
+		public void CheckUpdate()
 		{
 			string dir = AppDomain.CurrentDomain.BaseDirectory;
 			string file = Path.GetFileName(Assembly.GetEntryAssembly()?.Location);
@@ -409,7 +410,7 @@ namespace ModInstaller
 			}
 		}
 
-		public void FillModsList()
+		private void FillModsList()
 		{
 			XDocument dllist = XDocument.Load(ModLinks);
 			XElement[] mods = dllist.Element("ModLinks")?.Element("ModList")?.Elements("ModLink").ToArray();

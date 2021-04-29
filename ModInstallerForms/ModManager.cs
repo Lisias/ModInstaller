@@ -44,6 +44,7 @@ namespace ModInstaller.FormsUI
 			try
 			{
 				Manager.Instance.CheckLocalInstallation(this);
+    			Manager.Instance.UpdateInternalStructures();
     			this.CheckUpdate();
 				Manager.Instance.PiracyCheck();
 				if (Manager.Instance.CheckApiInstalled(this))
@@ -68,7 +69,7 @@ namespace ModInstaller.FormsUI
             try
             {
             #if !DEBUG
-                Manager.CheckUpdate();
+                Manager.Instance.CheckUpdate();
             #endif
             }
             catch (Exception)
@@ -85,7 +86,7 @@ namespace ModInstaller.FormsUI
         private void Form4_Closed(object sender, EventArgs e)
         {
             if (this.IsOffline) return;
-            Manager.Instance.FillModsList();
+            Manager.Instance.UpdateInternalStructures();
         }
 
         private void PopulateList()
