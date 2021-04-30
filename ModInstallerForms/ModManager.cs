@@ -4,15 +4,15 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
-using MIManager = ModInstaller.Manager;
+using MI = ModInstaller;
 
 // ReSharper disable LocalizableElement
 
 namespace ModInstaller.FormsUI
 {
-    public partial class ModManager : Form, MIManager.InstallationPathListener, MIManager.InstallResultListener
+    public partial class ModManager : Form, MI.Manager.InstallationPathListener, MI.Manager.InstallResultListener
     {
-		private class ModField : MIManager.ModEntry
+		private class ModField : MI.ModEntry
 		{
 			private Label name;
 			public new Label Name
@@ -43,16 +43,15 @@ namespace ModInstaller.FormsUI
         {
 			try
 			{
-				Manager.Instance.CheckLocalInstallation(this);
-    			Manager.Instance.UpdateInternalStructures();
-    			this.CheckUpdate();
+				Manager.Initialise(this);
+				this.CheckUpdate();
 				Manager.Instance.PiracyCheck();
 				if (Manager.Instance.CheckApiInstalled(this))
 					MessageBox.Show("Modding API successfully installed!");
 				PopulateList();
 				FillPanel();
 				ResizeUI();
-				Text = "Mod Manager " + MIManager.Version + " by " + MIManager.Author;
+				Text = "Mod Manager " + MI.Manager.Version + " by " + MI.Manager.Author;
 			}
 			catch (Exception ex)
 			{
@@ -86,14 +85,13 @@ namespace ModInstaller.FormsUI
         private void Form4_Closed(object sender, EventArgs e)
         {
             if (this.IsOffline) return;
-            Manager.Instance.UpdateInternalStructures();
         }
 
         private void PopulateList()
         {
             Manager.Instance.SearchInstalledFiles(this);
 
-            foreach (MIManager.Mod mod in Manager.Instance.ModsSortedList)
+            foreach (MI.Mod mod in Manager.Instance.ModsSortedList)
             {
                 if (Manager.Instance.AllMods.Contains(mod.Name)) 
                     continue;
@@ -108,7 +106,7 @@ namespace ModInstaller.FormsUI
             const int space = 50;
             const int hgt = 10;
 
-            foreach (MIManager.Mod mod in Manager.Instance.ModsSortedList)
+            foreach (MI.Mod mod in Manager.Instance.ModsSortedList)
             {
                 ModField entry = (ModField) Manager.Instance.ModEntries.Find(e => e.Name == mod.Name);
 
@@ -255,7 +253,7 @@ namespace ModInstaller.FormsUI
         {
             var button = (Button) sender;
             ModField entry = (ModField) Manager.Instance.ModEntries.First(f => ((ModField) f).InstallButton == button);
-            MIManager.Mod mod = Manager.Instance.ModsList.First(m => m.Name == entry.Name.Text);
+            MI.Mod mod = Manager.Instance.ModsList.First(m => m.Name == entry.Name.Text);
             string modname = mod.Name;
 
             if (entry.IsInstalled)
@@ -270,7 +268,7 @@ namespace ModInstaller.FormsUI
                 if (result != DialogResult.Yes)
                     return;
                 
-                Manager.Instance.Uninstall(modname, entry, this);
+                Manager.Instance.Uninstall(entry, this);
             }
             else
             {
@@ -305,13 +303,13 @@ namespace ModInstaller.FormsUI
                         if (depInstall != DialogResult.Yes) 
                             continue;
                         
-                        Manager.Instance.Install(optional, true, false, true, optMod, this);
+                        Manager.Instance.Install(optMod, true, false, true, this);
                         
                         MessageBox.Show($"{optional} successfully installed!");
                     }
                 }
 
-                Manager.Instance.Install(modname, true, false, true, entry, this);
+                Manager.Instance.Install(entry, true, false, true, this);
             }
         }
 
@@ -319,7 +317,7 @@ namespace ModInstaller.FormsUI
         {
             var button = (Button) sender;
             ModField entry = (ModField) Manager.Instance.ModEntries.First(f => ((ModField) f).EnableButton == button);
-            MIManager.Mod mod = Manager.Instance.ModsList.First(m => m.Name == entry.Name.Text);
+            MI.Mod mod = Manager.Instance.ModsList.First(m => m.Name == entry.Name.Text);
             string modname = mod.Name;
 
             if (entry.IsEnabled)
@@ -331,7 +329,7 @@ namespace ModInstaller.FormsUI
             entry.EnableButton.Text = entry.IsEnabled ? "Disable" : "Enable";
         }
 
-        private bool CheckModUpdated(string filename, MIManager.Mod mod, bool isEnabled)
+        private bool CheckModUpdated(string filename, MI.Mod mod, bool isEnabled)
         {
             if (Manager.Instance.CheckModUpdated(filename, mod, isEnabled))
                 return false;
@@ -381,7 +379,7 @@ namespace ModInstaller.FormsUI
 
 		#endregion
 
-		bool MIManager.InstallationPathListener.IsInstallationPath(string path)
+		bool MI.Manager.InstallationPathListener.IsInstallationPath(string path)
 		{
 			DialogResult dialogResult = MessageBox.Show
 			(
@@ -393,38 +391,34 @@ namespace ModInstaller.FormsUI
 			return (dialogResult != DialogResult.Yes);
 		}
 
-		void MIManager.InstallationPathListener.SetInstallationPathManually()
+		void MI.Manager.InstallationPathListener.SetInstallationPathManually()
 		{
 			ManualPathLocation form = new ManualPathLocation();
 			form.FormClosed += ManualPathClosed;
 			form.ShowDialog();
 		}
 
-		void MIManager.InstallResultListener.InstalledWithSuccess(string modname)
+		void MI.Manager.InstallResultListener.InstalledWithSuccess(ModEntry entry)
 		{
-			MessageBox.Show($"{modname} successfully installed!");
+			MessageBox.Show($"{entry.Name} successfully installed!");
 		}
 
-		void MIManager.InstallResultListener.UpdatedWithSuccess(string modname)
-		{
-			MessageBox.Show($"{modname} successfully updated!");
-		}
-
-		void MIManager.InstallResultListener.UninstalledWithSuccess(string modname)
-		{
-			MessageBox.Show($"{modname} successfully uninstalled!");
-		}
-
-		void MIManager.InstallResultListener.Update(MIManager.ModEntry e)
+		void MI.Manager.InstallResultListener.UpdatedWithSuccess(ModEntry e)
 		{
 			ModField entry = (ModField)e;
 			entry.InstallButton.Text = entry.IsInstalled ? "Uninstall" : "Install";
 			entry.EnableButton.Enabled = entry.IsInstalled;
 			entry.EnableButton.Text = entry.IsInstalled ? "Disable" : "Enable";
 			entry.ReadmeButton.Enabled = entry.IsInstalled;
+			MessageBox.Show($"{entry.Name} successfully updated!");
 		}
 
-		MIManager.ModEntry MIManager.InstallResultListener.Register(MIManager.ModEntry e)
+		void MI.Manager.InstallResultListener.UninstalledWithSuccess(ModEntry entry)
+		{
+			MessageBox.Show($"{entry.Name} successfully uninstalled!");
+		}
+
+		MI.ModEntry MI.Manager.InstallResultListener.Register(MI.ModEntry e)
 		{
 			ModField entry = new ModField
 			{
@@ -439,10 +433,11 @@ namespace ModInstaller.FormsUI
 			return entry;
 		}
 
-		void MIManager.InstallResultListener.Download(Uri uri, string path, string name)
+		bool MI.Manager.InstallResultListener.Download(Uri uri, string path, string name)
 		{
 			DownloadHelper download = new DownloadHelper(uri, path, name);
 			download.ShowDialog();
+            return true;
 		}
 	}
 }

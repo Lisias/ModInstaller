@@ -18,22 +18,39 @@
 <ModLinks xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<DriveLink>https://drive.google.com/drive/u/0/folders/1lnjtSYMfRe1LyA_qSq2CoXKI6NRm_I-e</DriveLink>
 	<Installer>
-	    <Link><![CDATA[https://radiance.host/mods/ModInstaller.exe]]></Link>
-	    <SHA1>B51FCE1DC9CF80D95BBC370C72CC80C7A711AB54</SHA1>
-	    <AULink><![CDATA[https://github.com/Ayugradow/ModInstaller-Auto-Updater/releases/download/v1.0/ModInstallerAutoUpdater.exe]]></AULink>
+		<Link><![CDATA[https://radiance.host/mods/ModInstaller.exe]]></Link>
+		<SHA1>B51FCE1DC9CF80D95BBC370C72CC80C7A711AB54</SHA1>
+		<AULink><![CDATA[https://github.com/net-lisias-hk/ModInstaller-Auto-Updater/releases/download/v1.0/ModInstallerAutoUpdater.exe]]></AULink>
 	</Installer>
+	<Vanilla>
+		<File>
+			<Name>Assembly-CSharp.dll</Name>
+			<SHA1>
+				<MacOS>21A9935A81F1FCBA0D10FED51624B35C82103068</MacOS>
+				<Linux>?????</Linux>
+				<Windows>?????</Windows>
+			</SHA1>
+		</File>
+	</Vanilla>
 	<ModList>
 		<ModLink>
 			<Name>Modding API</Name>
 			<Files>
 				<File>
 					<Name>Assembly-CSharp.dll</Name>
-					<SHA1>E880EA1B2B4B57FBD6ECA36B26746F08FF4EEF9F</SHA1>
 					<Patch>1.4.3.2</Patch>
+					<SHA1>
+						<MacOS>142CB98CB82809812CF451A0FC8F498CDCA80E0D</MacOS>
+						<Linux>?????</Linux>
+						<Windows>E880EA1B2B4B57FBD6ECA36B26746F08FF4EEF9F</Windows>
+					</SHA1>
 				</File>
 			</Files>
-			<Link><![CDATA[https://drive.google.com/uc?export=download&id=1lMvPf30KGvHKcOW-q0-tQnJ_zyljmyex]]></Link>
-			<UnixLink><![CDATA[https://drive.google.com/uc?export=download&id=1lMvPf30KGvHKcOW-q0-tQnJ_zyljmyex]]></UnixLink>
+			<Link>
+				<MacOS><![CDATA[file:///Users/lisias/Workspaces/HollowKnight/HollowKnight.Modding/ModdingAPI.zip]]></MacOS>
+				<Linux><![CDATA[?????]]></Linux>
+				<Windows><![CDATA[https://drive.google.com/uc?export=download&id=1lMvPf30KGvHKcOW-q0-tQnJ_zyljmyex]]></Windows>
+			</Link>
 			<Dependencies />
 		</ModLink>
 		<ModLink>
@@ -88,10 +105,10 @@
 		</ModLink>
 		<ModLink>
 			<Name>Job change</Name>
-		    	<Files>
+			<Files>
 				<File>
-			    		<Name>jobChange.dll</Name>
-			    		<SHA1>d0a5359b74e4e8c81009d3fb5f3b6278ee431a7f</SHA1>
+					<Name>jobChange.dll</Name>
+					<SHA1>d0a5359b74e4e8c81009d3fb5f3b6278ee431a7f</SHA1>
 				</File>
 			</Files>
 			<Link><![CDATA[https://github.com/RechercheJewel/jobChange/releases/download/v1/Job.change.by.Jewel.zip]]></Link>
@@ -118,18 +135,18 @@
 			</Dependencies>
 		</ModLink>
 		<ModLink>
-		    <Name>Dumbmod</Name>
-		    <Description>Makes most animated things invisible</Description>
-		    <Files>
+			<Name>Dumbmod</Name>
+			<Description>Makes most animated things invisible</Description>
+			<Files>
 			<File>
-			    <Name>dumbmod.dll</Name>
-			    <SHA1>863b4fbc3580f754561bc73c98957e0476dae0c3</SHA1>
+				<Name>dumbmod.dll</Name>
+				<SHA1>863b4fbc3580f754561bc73c98957e0476dae0c3</SHA1>
 			</File>
-		    </Files>
-		    <Link><![CDATA[https://drive.google.com/uc?export=download&id=1hXkMIgtRQcOUfV61ORt3eAq959CTa797]]></Link>
-		    <Dependencies>
+			</Files>
+			<Link><![CDATA[https://drive.google.com/uc?export=download&id=1hXkMIgtRQcOUfV61ORt3eAq959CTa797]]></Link>
+			<Dependencies>
 			<string>Modding API</string>
-		    </Dependencies>
+			</Dependencies>
 		</ModLink>
 		<ModLink>
 			<Name>HollowPoint (SEE README)</Name>
@@ -440,7 +457,7 @@
 				<string>Modding API</string>
 			</Dependencies>
 		</ModLink>
-       	        <ModLink>
+		<ModLink>
 			<Name>SereCore</Name>
 			<Description>Library used mostly by the Randomizer mods</Description>
 			<Files>
@@ -454,7 +471,7 @@
 				<string>Modding API</string>
 			</Dependencies>
 		</ModLink>
-       	        <ModLink>
+		<ModLink>
 			<Name>Vasi</Name>
 			<Description>Library required for some mods to function</Description>
 			<Files>
@@ -636,16 +653,16 @@
 					<SHA1>65150d277adc4d6d3e01ef5c4d9ad5620a1a184f</SHA1>
 				</File>
 				<File>
-				    <Name>redwing\ending3.webm</Name>
-				    <SHA1>3d3eb119faab3039fde72dfded3e05e380afc3fb</SHA1>
+					<Name>redwing\ending3.webm</Name>
+					<SHA1>3d3eb119faab3039fde72dfded3e05e380afc3fb</SHA1>
 				</File>
 				<File>
-				    <Name>redwing\ending2.webm</Name>
-				    <SHA1>bb23b47fa016b86858e7e710349882266f14117d</SHA1>
+					<Name>redwing\ending2.webm</Name>
+					<SHA1>bb23b47fa016b86858e7e710349882266f14117d</SHA1>
 				</File>
 				<File>
-				    <Name>redwing\ending1.webm</Name>
-				    <SHA1>09559c228d4efabd4b690645593e9a1df9d855ca</SHA1>
+					<Name>redwing\ending1.webm</Name>
+					<SHA1>09559c228d4efabd4b690645593e9a1df9d855ca</SHA1>
 				</File>
 			</Files>
 			<Link><![CDATA[https://radiance.host/mods/redwingAssets.zip]]></Link>
@@ -662,28 +679,28 @@
 					<SHA1>bb280b38d75f5366586a944ba924c84667e6edac</SHA1>
 				</File>
 				<File>
-				    <Name>halfmod.assets</Name>
-				    <SHA1>5a629d929df2bdf022f41ff7623613492da0f2ba</SHA1>
+					<Name>halfmod.assets</Name>
+					<SHA1>5a629d929df2bdf022f41ff7623613492da0f2ba</SHA1>
 				</File>
 				<File>
-				    <Name>halfmod.dll</Name>
-				    <SHA1>e30deb3f322ec8a883543ab6482c08e250ce0e19</SHA1>
+					<Name>halfmod.dll</Name>
+					<SHA1>e30deb3f322ec8a883543ab6482c08e250ce0e19</SHA1>
 				</File>
 				<File>
-				    <Name>halfmod.webm</Name>
-				    <SHA1>81281b9e8573605effc19843f373fef90aaa37c7</SHA1>
+					<Name>halfmod.webm</Name>
+					<SHA1>81281b9e8573605effc19843f373fef90aaa37c7</SHA1>
 				</File>
 				<File>
-				    <Name>nuke.webm</Name>
-				    <SHA1>0c298f9f0f3bda1e5db4f8c4e6d33b701ed77c9b</SHA1>
+					<Name>nuke.webm</Name>
+					<SHA1>0c298f9f0f3bda1e5db4f8c4e6d33b701ed77c9b</SHA1>
 				</File>
 				<File>
-				    <Name>shitmothst.dll</Name>
-				    <SHA1>71aa0223e7c63ac0fdeccc18e2530fe468115cb4</SHA1>
+					<Name>shitmothst.dll</Name>
+					<SHA1>71aa0223e7c63ac0fdeccc18e2530fe468115cb4</SHA1>
 				</File>
 				<File>
-				    <Name>atomicradiance.dll</Name>
-				    <SHA1>0c31659935ecde6c1bfe6801087b6e28d1a4f71a</SHA1>
+					<Name>atomicradiance.dll</Name>
+					<SHA1>0c31659935ecde6c1bfe6801087b6e28d1a4f71a</SHA1>
 				</File>
 			</Files>
 			<Link><![CDATA[https://radiance.host/mods/artmods.zip]]></Link>
@@ -1265,7 +1282,7 @@
 				<string>ModCommon</string>
 			</Dependencies>
 		</ModLink>
-    	<ModLink>
+		<ModLink>
 			<Name>AdditionalMaps</Name>
 			<Description>A mod that adds maps for the White Palace and Godhome.</Description>
 			<Files>
@@ -1280,7 +1297,7 @@
 				<string>SFCore</string>
 			</Dependencies>
 		</ModLink>
-    	<ModLink>
+		<ModLink>
 			<Name>Test of Teamwork</Name>
 			<Description>This mod adds a platforming section to the White Palace.</Description>
 			<Files>
@@ -1413,9 +1430,9 @@
 				<string>Modding API</string>
 				<string>SereCore</string>
 				<string>ModCommon</string>
-			</Dependencies> 
+			</Dependencies>
 		</ModLink>
-    	<ModLink>
+		<ModLink>
 			<Name>ToggleableBindings</Name>
 			<Description>A mod that allows you to enable and disable bindings at any time.</Description>
 			<Files>

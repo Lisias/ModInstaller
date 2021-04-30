@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Data;
 using System.IO;
-using System.Net;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Xml.Linq;
 using System.Security;
 using System.Linq;
@@ -24,37 +19,37 @@ namespace ModInstaller
 
 		public interface InstallResultListener
 		{
-			void Download(Uri uri, string path, string name);
-			void InstalledWithSuccess(string modname);
-			void UpdatedWithSuccess(string modname);
-			void UninstalledWithSuccess(string modname);
-			void Update(ModEntry entry);
 			ModEntry Register(ModEntry entry);
+
+			// Should return true if the caller did the download itself, or false if it didn't.
+			bool Download(Uri uri, string path, string name);
+
+			void InstalledWithSuccess(ModEntry entry);
+			void UninstalledWithSuccess(ModEntry entry);
+			void UpdatedWithSuccess(ModEntry entry);
 		}
 
-		private const string ModLinks = "https://raw.githubusercontent.com/Ayugradow/ModInstaller/master/modlinks.xml";
+		//private const string WebStore = "https://store.steampowered.com/app/367520/Hollow_Knight/";
+		private const string WebStore = "https://www.gog.com/game/hollow_knight/"; // I prefer GOG! :)
+
+		//private const string ModLinks = "https://raw.githubusercontent.com/Ayugradow/ModInstaller/master/modlinks.xml";
+		//private const string ModLinks = "https://raw.githubusercontent.com/net-lisias-hk/ModInstaller/master/modlinks.xml";
+		private const string ModLinks = "file:///Users/lisias/Workspaces/HollowKnight/ModInstaller/modlinks.xml";
 
 		public const string Version = "v8.7.2 /L";
 		public const string Author = "Lisias";
 
-		public struct Mod
-		{
-			public string Name { get; set; }
-			public Dictionary<string, string> Files { get; set; }
-			public string Link { get; set; }
-			public List<string> Dependencies { get; set; }
-			public List<string> Optional { get; set; }
-		}
+		private Installer installer;
+		private Vanilla vanilla;
+		public bool VanillaEnabled => this.vanilla.IsEnabled;
 
-		public class ModEntry
-		{
-			public string Name { get; set; }
-			public bool IsInstalled { get; set; }
-			public bool IsEnabled { get; set; }
-		} 
+		private Api api;
+		public bool ApiIsInstalled { get; private set; }
+		public bool AssemblyIsAPI { get; private set; }
+		public string CurrentPatch => this.api.Patch;
 
 		private static string _OS;
-		public string OS => _OS ?? (_OS = GetCurrentOS());
+		public static string OS => _OS ?? (_OS = Util.GetCurrentOS());
 
 		public string OSPath => 
 			OS == "MacOS"
@@ -79,31 +74,20 @@ namespace ModInstaller
 
 		public List<ModEntry> ModEntries => modEntries;
 
-		public bool ApiIsInstalled { get; private set; }
-		public bool AssemblyIsAPI { get; private set; }
-
-		private string _apiSha1 = "";
-		public bool VanillaEnabled => !SHA1Equals(this.settings.APIFolder + "/Assembly-CSharp.dll", _apiSha1);
-
-		public string CurrentPatch { get; private set; }
-
-		private string _apiLink;
-
-		public Manager(ISettings settings)
+		public Manager(ISettings settings, InstallationPathListener pathListener)
 		{
-			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
 			this.settings = settings;
 			this.FillDefaultPaths();
+			this.CheckLocalInstallation(pathListener);
+			this.LoadModLinks();
 		}
 
 		#region Initialization and Self Update.
 
-		// FIXME : Code a first install, preserving the original Assembly-CSharp.dll into Assembly-CSharp.dll.vanilla
 		public void CheckUpdate()
 		{
 			string dir = AppDomain.CurrentDomain.BaseDirectory;
 			string file = Path.GetFileName(Assembly.GetEntryAssembly()?.Location);
-			XDocument dllist = XDocument.Load(ModLinks);
 
 			if (File.Exists($"{dir}/lol.exe"))
 				File.Delete($"{dir}/lol.exe");
@@ -111,35 +95,11 @@ namespace ModInstaller
 			if (File.Exists($"{dir}/AU.exe"))
 				File.Delete($"{dir}/AU.exe");
 
-			XElement installer = dllist.Element("ModLinks")?.Element("Installer");
-
 			// If the SHA1s are non-equal, update.
-			if (installer == null || SHA1Equals($"{dir}/{file}", installer.Element("SHA1")?.Value)) return;
+			if (null == this.installer || Util.SHA1Equals($"{dir}/{file}", installer.Sha1)) return;
 
-			WebClient dl = new WebClient();
-			dl.DownloadFile
-			(
-				new Uri
-				(
-					installer.Element("AULink")?.Value ?? throw new NoNullAllowedException("AULink Missing!")
-				),
-				$"{dir}/AU.exe"
-			);
-
-			Process process = new Process
-			{
-				StartInfo =
-				{
-					FileName = $"{dir}/AU.exe",
-					Arguments = $"\"{dir}\" {installer.Element("Link")?.Value} {file}"
-				}
-			};
-			process.Start();
-		}
-
-		public void UpdateInternalStructures()
-		{
-			this.FillModsList();
+			Util.DownloadFile(this.installer, dir);
+			Util.Execute(this.installer, dir, file);
 		}
 
 		public void SetInstallationPath(string selectedPath)
@@ -176,7 +136,7 @@ namespace ModInstaller
 			}
 		}
 
-		public void CheckLocalInstallation(InstallationPathListener installationPathCallback)
+		private void CheckLocalInstallation(InstallationPathListener installationPathCallback)
 		{
 			string installFolder = this.settings.installFolder;
 			if (string.IsNullOrEmpty(installFolder))
@@ -205,6 +165,8 @@ namespace ModInstaller
 				if (string.IsNullOrEmpty(installFolder))
 				{
 					installationPathCallback.SetInstallationPathManually();
+					SetDefaultPath(this.settings.installFolder);
+					CheckTemporary();
 				}
 			}
 		}
@@ -231,7 +193,7 @@ namespace ModInstaller
 			)
 				return;
 
-			Process.Start("https://store.steampowered.com/app/367520/Hollow_Knight/");
+			Util.Open(WebStore);
 			throw new VerificationException("Please purchase the game before attempting to play it.");
 		}
 
@@ -286,14 +248,15 @@ namespace ModInstaller
 				throw new VerificationException("Unable to locate game files.\nPlease make sure the game is installed and then try again.");
 			}
 
-			if (!this.ApiIsInstalled || this.AssemblyIsAPI && !SHA1Equals($"{this.settings.APIFolder}/Assembly-CSharp.dll", _apiSha1))
+			if (!this.ApiIsInstalled || this.AssemblyIsAPI && !Util.SHA1Equals($"{this.settings.APIFolder}/Assembly-CSharp.dll", this.api.Sha1))
 			{
-				callback.Download
-				(
-					new Uri(_apiLink),
-					$"{this.settings.installFolder}/Modding API.zip",
-					"Modding API"
-				);
+				if (!callback.Download (
+						new Uri(this.api.Link),
+						$"{this.settings.installFolder}/Modding API.zip",
+						"Modding API"
+					))
+					Util.DownloadFile(this.api, this.settings.installFolder);
+
 				InstallApi
 				(
 					$"{this.settings.installFolder}/Modding API.zip",
@@ -327,17 +290,7 @@ namespace ModInstaller
 				}
 				else
 				{
-					mod = new Mod
-					{
-						Name = Path.GetFileNameWithoutExtension(modsFile.Name),
-						Files = new Dictionary<string, string>
-						{
-							[Path.GetFileName(modsFile.Name)] = GetSHA1(modsFile.FullName)
-						},
-						Link = "",
-						Dependencies = new List<string>(),
-						Optional = new List<string>()
-					};
+					mod = new Mod(Path.GetFileNameWithoutExtension(modsFile.Name), new Dictionary<string, string>{[Path.GetFileName(modsFile.Name)] = Util.GetSHA1(modsFile.FullName)});
 				}
 
 				if (string.IsNullOrEmpty(mod.Name) || this.allMods.Contains(mod.Name))
@@ -367,14 +320,7 @@ namespace ModInstaller
 				}
 				else
 				{
-					mod = new Mod
-					{
-						Name = Path.GetFileNameWithoutExtension(file.Name),
-						Files = new Dictionary<string, string> { [Path.GetFileName(file.Name)] = GetSHA1(file.FullName) },
-						Link = "",
-						Dependencies = new List<string>(),
-						Optional = new List<string>()
-					};
+					mod = new Mod(Path.GetFileNameWithoutExtension(file.Name), new Dictionary<string, string>{[Path.GetFileName(file.Name)] = Util.GetSHA1(file.FullName)});
 				}
 
 				if (string.IsNullOrEmpty(mod.Name) || this.allMods.Contains(mod.Name))
@@ -410,11 +356,14 @@ namespace ModInstaller
 			}
 		}
 
-		private void FillModsList()
+		private void LoadModLinks()
 		{
-			XDocument dllist = XDocument.Load(ModLinks);
-			XElement[] mods = dllist.Element("ModLinks")?.Element("ModList")?.Elements("ModLink").ToArray();
+			XDocument modLinks = XDocument.Load(ModLinks);
+			XElement xElements = modLinks.Element("ModLinks");
 
+			this.installer = new Installer(this.settings.APIFolder, xElements?.Element("Installer"));
+			this.vanilla = new Vanilla(this.settings.APIFolder, xElements?.Element("Vanilla"), Manager.OS);
+			XElement[] mods = xElements?.Element("ModList")?.Elements("ModLink").ToArray();
 			if (mods == null) return;
 
 			foreach (XElement mod in mods)
@@ -422,35 +371,10 @@ namespace ModInstaller
 				switch (mod.Element("Name")?.Value)
 				{
 					case "Modding API":
-						_apiLink = OS == "Windows" ? mod.Element("Link")?.Value : mod.Element("UnixLink")?.Value;
-						_apiSha1 = mod.Element("Files")?.Element("File")?.Element("SHA1")?.Value;
-						this.CurrentPatch = mod.Element("Files")?.Element("File")?.Element("Patch")?.Value;
+						this.api = new Api(this.settings.installFolder, mod, Manager.OS);
 						break;
 					default:
-						this.modsList.Add
-						(
-							new Mod
-							{
-								Name = mod.Element("Name")?.Value,
-								Link = mod.Element("Link")?.Value,
-								Files = mod.Element("Files")
-										   ?.Elements("File")
-										   .ToDictionary
-										   (
-											   element => element.Element("Name")?.Value,
-											   element => element.Element("SHA1")?.Value
-										   ),
-								Dependencies = mod.Element("Dependencies")
-												  ?.Elements("string")
-												  .Select(dependency => dependency.Value)
-												  .ToList(),
-								Optional = mod.Element("Optional")
-											  ?.Elements("string")
-											  .Select(dependency => dependency.Value)
-											  .ToList()
-									?? new List<string>()
-							}
-						);
+						this.modsList.Add(new Mod(mod));
 						break;
 				}
 			}
@@ -465,7 +389,7 @@ namespace ModInstaller
 			{
 				if (Directory.Exists("/tmp/HKmodinstaller"))
 				{
-					Manager.DeleteDirectory("/tmp/HKmodinstaller");
+					Util.DeleteDirectory("/tmp/HKmodinstaller");
 				}
 
 				Directory.CreateDirectory("/tmp/HKmodinstaller");
@@ -492,7 +416,7 @@ namespace ModInstaller
 			{
 				if (Directory.Exists($"{d}tmp/HKmodinstaller"))
 				{
-					DeleteDirectory($"{d}tmp/HKmodinstaller");
+					Util.DeleteDirectory($"{d}tmp/HKmodinstaller");
 				}
 
 				Directory.CreateDirectory($"{d}tmp/HKmodinstaller");
@@ -504,25 +428,6 @@ namespace ModInstaller
 					? $"{d}tempMods"
 					: $"{d}temp";
 			}
-		}
-
-	private static void DeleteDirectory(string targetDir)
-		{
-			string[] files = Directory.GetFiles(targetDir);
-			string[] dirs = Directory.GetDirectories(targetDir);
-
-			foreach (string file in files)
-			{
-				File.SetAttributes(file, FileAttributes.Normal);
-				File.Delete(file);
-			}
-
-			foreach (string dir in dirs)
-			{
-				DeleteDirectory(dir);
-			}
-
-			Directory.Delete(targetDir, false);
 		}
 
 		#region Downloading and installing
@@ -545,37 +450,33 @@ namespace ModInstaller
 				if (null == dependencyMod)
 					throw new FileNotFoundException($"Could not find \"{dependency}\" which is required to run \"{mod.Name}\"!\r\nYou may need to install \"{dependency}\" manually.");
 
-				Install(dependency, true, false, true, dependencyMod, callback);
+				Install(dependencyMod, true, false, true, callback);
 			}
 		}
 
-		public void Install(string modname, bool isInstall, bool isUpdate, bool isEnabled, ModEntry entry, InstallResultListener callback)
+		public void Install(ModEntry entry, bool isInstall, bool isUpdate, bool isEnabled, InstallResultListener callback)
 		{
+			Mod mod = this.modsList.First(m => m.Name == entry.Name);
 			if (isInstall)
 			{
-				callback.Download
-				(
-					new Uri(this.modsList.First(m => m.Name == modname).Link),
-					$"{this.settings.modFolder}/{modname}.zip",
-					modname
-				);
+				if (!callback.Download(
+					new Uri(mod.Link),
+					$"{this.settings.modFolder}/{mod.Name}.zip",
+					mod.Name
+				))
+					Util.Download(mod, this.settings.modFolder);
 
 				InstallMods
 				(
-					$"{this.settings.modFolder}/{modname}.zip",
+					$"{this.settings.modFolder}/{mod.Name}.zip",
 					this.settings.temp,
 					isEnabled
 				);
 
-				File.Delete($"{this.settings.modFolder}/{modname}.zip");
-
-				if (isUpdate)	callback.UpdatedWithSuccess(modname);
-				else			callback.InstalledWithSuccess(modname);
+				File.Delete($"{this.settings.modFolder}/{mod.Name}.zip");
 			}
 			else
 			{
-				Mod mod = this.modsList.First(m => m.Name == entry.Name);
-
 				string readmeModPathNoExtension = $"{this.settings.installFolder}/README({mod.Name})";
 				string readmeModPathTxt = $"{readmeModPathNoExtension}.txt";
 				string readmeModPathMd = $"{readmeModPathNoExtension}.md";
@@ -603,20 +504,22 @@ namespace ModInstaller
 					File.Delete(readmeModPathMd);
 				}
 
-				callback.UninstalledWithSuccess(modname);
-				this.InstalledMods.Remove(modname);
+				this.InstalledMods.Remove(mod.Name);
 			}
 
-			entry.IsInstalled = !entry.IsInstalled;
-			entry.IsEnabled = entry.IsInstalled;
-			callback.Update(entry);
+			entry.IsInstalled = isInstall;
+			entry.IsEnabled = entry.IsInstalled && isEnabled;
+
+			if (isInstall)	callback.InstalledWithSuccess(entry);
+			if (isUpdate)	callback.UpdatedWithSuccess(entry);
+			else			callback.UninstalledWithSuccess(entry);
 		}
 
-		public void Uninstall(string mod, ModEntry entry, InstallResultListener callback) => Install(mod, false, false, false, entry, callback);
+		public void Uninstall(ModEntry entry, InstallResultListener callback) => Install(entry, false, false, false, callback);
 
-		public bool CheckModUpdated(string filename, Manager.Mod mod, bool isEnabled)
+		public bool CheckModUpdated(string filename, Mod mod, bool isEnabled)
 		{
-			return SHA1Equals (
+			return Util.SHA1Equals (
 				filename,
 				mod.Files[mod.Files.Keys.First(f => f == Path.GetFileName(filename))]
 			);
@@ -625,12 +528,12 @@ namespace ModInstaller
 		public void UpdateMod(Mod mod, bool isEnabled, ModEntry updateMod, InstallResultListener callback)
 		{
 			this.InstallDependencies(mod, callback);
-			this.Install(mod.Name, true, true, isEnabled, updateMod, callback);
+			this.Install(updateMod, true, true, isEnabled, callback);
 		}
 
 		public void OpenReadMe(ModEntry entry)
 		{
-			Manager.Mod mod = this.ModsList.First(m => m.Name == entry.Name);
+			Mod mod = this.ModsList.First(m => m.Name == entry.Name);
 			string modName = mod.Name;
 
 			// The only two possible options are .txt or .md, which follows from the InstallMods method
@@ -642,19 +545,19 @@ namespace ModInstaller
 			// If a readme is created, open it using the default application.
 			if (File.Exists(readmeModPathTxt))
 			{
-				Process.Start(readmeModPathTxt);
+				Util.Open(readmeModPathTxt);
 			}
 			else if (File.Exists(readmeModPathMd))
 			{
 				try
 				{
-					Process.Start(readmeModPathMd);
+					Util.Open(readmeModPathMd);
 				}
 				catch
 				{
 					string tempReadme = Path.GetTempPath() + "HKModInstallerTempReadme.txt";
 					File.Copy(readmeModPathMd, tempReadme, true);
-					Process.Start(tempReadme);
+					Util.Open(tempReadme);
 				}
 			}
 			else
@@ -747,6 +650,23 @@ namespace ModInstaller
 
 		private void InstallApi(string api, string tempFolder)
 		{
+			// Check if first time installation.
+			// If an accident happens below, we can have an inconsistency between .dll, .vanilla and .mod.
+			// The .bkp ensures us we will always have a printine DLL to restart over.
+			// (yeah, I messed up my game - this is why I'm working on this now! =] )
+			if (!File.Exists($"{this.settings.APIFolder}/Assembly-CSharp.dll.bkp"))
+			{
+				if (!this.vanilla.IsEnabled) throw new InvalidOperationException(
+					"The Assembly-CSharp.dll is not the original and no backup was found. Your installment is inconsistent.\n"
+					+"Reinstall or Repair the game and try again."
+				);
+				File.Copy
+				(
+					$"{this.settings.APIFolder}/Assembly-CSharp.dll",
+					$"{this.settings.APIFolder}/Assembly-CSharp.bkp",
+					false
+				);
+			}
 			{
 				FastZip zipFile = new FastZip();
 				zipFile.ExtractZip(api, tempFolder, "*");
@@ -773,7 +693,7 @@ namespace ModInstaller
 					string[] dll = Directory.GetFiles(mod, "*.dll", SearchOption.AllDirectories);
 					if (dll.Length == 0)
 					{
-						MoveDirectory(mod, $"{this.settings.installFolder}/{Path.GetFileName(mod)}/");
+						Util.MoveDirectory(mod, $"{this.settings.installFolder}/{Path.GetFileName(mod)}/");
 					}
 				}
 
@@ -871,48 +791,6 @@ namespace ModInstaller
 			this.installedMods.Add(mod);
 		}
 
-		private static void MoveDirectory(string source, string target)
-		{
-			string sourcePath = source.TrimEnd('\\', ' ');
-			string targetPath = target.TrimEnd('\\', ' ');
-			IEnumerable<IGrouping<string, string>> files = Directory.EnumerateFiles
-																	(
-																		sourcePath,
-																		"*",
-																		SearchOption.AllDirectories
-																	)
-																	.GroupBy(Path.GetDirectoryName);
-
-			foreach (IGrouping<string, string> folder in files)
-			{
-				string targetFolder = folder.Key.Replace(sourcePath, targetPath);
-				Directory.CreateDirectory(targetFolder);
-				foreach (string file in folder)
-				{
-					string targetFile = Path.Combine
-					(
-						targetFolder,
-						Path.GetFileName(file) ?? throw new NoNullAllowedException("File name is null!")
-					);
-					if (File.Exists(targetFile))
-					{
-						if (!File.Exists($"{targetFolder}/{Path.GetFileName(targetFile)}.vanilla"))
-						{
-							File.Move(targetFile, $"{targetFolder}/{Path.GetFileName(targetFile)}.vanilla");
-						}
-						else
-						{
-							File.Delete(targetFile);
-						}
-					}
-
-					File.Move(file, targetFile);
-				}
-			}
-
-			Directory.Delete(source, true);
-		}
-
 		#endregion
 
 		#endregion
@@ -933,7 +811,6 @@ namespace ModInstaller
 					$"{this.settings.APIFolder}/Assembly-CSharp.dll",
 					true
 				);
-				this.AssemblyIsAPI = false;
 				return true;
 			}
 			return false;
@@ -955,7 +832,6 @@ namespace ModInstaller
 					$"{this.settings.APIFolder}/Assembly-CSharp.dll",
 					true
 				);
-				this.AssemblyIsAPI = true;
 				return true;
 			}
 			return false;
@@ -970,30 +846,6 @@ namespace ModInstaller
 				)
 				&& new[] { "hollow_knight.app", "Hollow Knight.app" }.Contains(Path.GetFileName(path))
 				: File.Exists(path + "/hollow_knight_Data/Managed/Assembly-CSharp.dll");
-		}
-
-		private static string GetCurrentOS()
-		{
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-				return "Windows";
-			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-				return "MacOS";
-			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-				return "Linux";
-			else
-				return "Windows";
-		}
-
-		private static bool SHA1Equals(string file, string modmd5) => string.Equals(GetSHA1(file), modmd5, StringComparison.InvariantCultureIgnoreCase);
-
-		private static string GetSHA1(string file)
-		{
-			using (SHA1 sha1 = SHA1.Create())
-			using (FileStream stream = File.OpenRead(file))
-			{
-				byte[] hash = sha1.ComputeHash(stream);
-				return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
-			}
 		}
 	}
 }

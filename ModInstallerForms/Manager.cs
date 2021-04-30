@@ -5,7 +5,14 @@ namespace ModInstaller.FormsUI
 	public static class Manager
 	{
 		private static ModInstaller.Manager instance;
-		internal static ModInstaller.Manager Instance => instance ??= new ModInstaller.Manager(new Storage());
+		internal static ModInstaller.Manager Instance => instance;
+
+		internal static void Initialise(ModInstaller.Manager.InstallationPathListener listener)
+		{
+			instance = new ModInstaller.Manager(new Storage(), listener); 
+		}
+
+		internal static string OS => ModInstaller.Manager.OS;
 	}
 
 	public class Storage : ModInstaller.ISettings
