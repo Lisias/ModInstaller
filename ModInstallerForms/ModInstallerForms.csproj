@@ -101,8 +101,19 @@
             <DependentUpon>Settings.settings</DependentUpon>
             <DesignTimeSharedInput>True</DesignTimeSharedInput>
         </Compile>
+        <None Include="..\ModInstaller\bin\Release\ModInstaller.dll">
+          <Link>EmbeddedResources\ModInstaller.dll</Link>
+        </None>
+        <None Include="..\ModInstaller\bin\Release\ICSharpCode.SharpZipLib.dll">
+          <Link>EmbeddedResources\ICSharpCode.SharpZipLib.dll</Link>
+        </None>
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\ModInstaller\ModInstaller.csproj" />
+      <ProjectReference Include="..\ModInstaller\ModInstaller.csproj">
+        <Private>False</Private>
+      </ProjectReference>
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="EmbeddedResources\" />
     </ItemGroup>
 </Project>
