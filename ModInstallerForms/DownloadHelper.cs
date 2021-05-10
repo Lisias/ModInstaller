@@ -1,12 +1,9 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Net;
 using System.Windows.Forms;
 
 namespace ModInstaller.FormsUI
 {
-    public partial class DownloadHelper : Form
+    public partial class DownloadHelper : Form, ModInstaller.DownloadProgressListener
     {
         public DownloadHelper()
         {
@@ -17,59 +14,40 @@ namespace ModInstaller.FormsUI
         {
             _modname = modname;
             InitializeComponent();
-            StartDownload(uri, path);
         }
 
-        private void StartDownload(Uri uri, string path)
-        {
-            using (_webClient = new WebClient())
-            {
-                _webClient.DownloadFileCompleted += Completed;
-                _webClient.DownloadProgressChanged += ProgressChanged;
+		void ModInstaller.DownloadProgressListener.Progress(long bytesReceived, long totalBytesToReceive, long elapsedMilliseconds)
+		{
+			labelModname.Text = $"Downloading {_modname}";
 
-                // Start the stopwatch which we will be using to calculate the download speed
-                _sw.Start();
+			// Calculate download speed and output it to labelSpeed.
+			labelSpeed.Text = $"{(bytesReceived / 1024d / elapsedMilliseconds / 1000).ToString("0.00")} kb/s";
 
-                try
-                {
-                    // Start downloading the file
-                    _webClient.DownloadFileAsync(uri, path);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            }
-        }
+			// Update the progressbar percentage only when the value is not the same.
+			progressBar.Value = (int)(bytesReceived / totalBytesToReceive);
 
+			// Update the label with how much data have been downloaded so far and the total size of the file we are currently downloading
+			labelDownloaded.Text = $"{(bytesReceived / 1024d / 1024d).ToString("0.00")} MB / {(totalBytesToReceive / 1024d / 1024d).ToString("0.00")} MB";
+		}
 
-        // The event that will fire whenever the progress of the WebClient is changed
-        private void ProgressChanged(object sender, DownloadProgressChangedEventArgs e)
-        {
-            labelModname.Text = $"Downloading {_modname}";
+		void ModInstaller.DownloadProgressListener.Completed(long sizeInBytes, long timeInMilliseconds)
+		{
+			MessageBox.Show("Download completed!");
+			Close();
+		}
 
-            // Calculate download speed and output it to labelSpeed.
-            labelSpeed.Text = $"{(e.BytesReceived / 1024d / _sw.Elapsed.TotalSeconds).ToString("0.00")} kb/s";
+		void ModInstaller.DownloadProgressListener.Aborted(Exception e)
+		{
+			MessageBox.Show("Download has been aborted due {0}.", e.Message);
+			Close();
+		}
 
-            // Update the progressbar percentage only when the value is not the same.
-            progressBar.Value = e.ProgressPercentage;
+		void ModInstaller.DownloadProgressListener.Cancelled()
+		{
+			MessageBox.Show("Download has been canceled.");
+			Close();
+		}
 
-            // Update the label with how much data have been downloaded so far and the total size of the file we are currently downloading
-            labelDownloaded.Text =
-                $"{(e.BytesReceived / 1024d / 1024d).ToString("0.00")} MB / {(e.TotalBytesToReceive / 1024d / 1024d).ToString("0.00")} MB";
-        }
-
-        // The event that will trigger when the WebClient is completed
-        private void Completed(object sender, AsyncCompletedEventArgs e)
-        {
-            // Reset the stopwatch.
-            _sw.Reset();
-
-            MessageBox.Show(e.Cancelled ? "Download has been canceled." : "Download completed!");
-            Close();
-        }
-        private WebClient _webClient;
-        private readonly Stopwatch _sw = new Stopwatch();
         private readonly string _modname;
     }
 }

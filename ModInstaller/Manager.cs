@@ -5,12 +5,18 @@ using System.Reflection;
 using System.Xml.Linq;
 using System.Security;
 using System.Linq;
-using ICSharpCode.SharpZipLib.Zip;
+using System.ComponentModel;
 
 namespace ModInstaller
 {
 	public class Manager
 	{
+		private const string ASSEMBLY_DLL = "Assembly-CSharp.dll";
+		private const string ASSEMBLY_BKP = "Assembly-CSharp.bkp";
+		private const string ASSEMBLY_MOD = "Assembly-CSharp.mod";
+		private const string ASSEMBLY_VANILLA = "Assembly-CSharp.vanilla";
+		private const string DISABLED_FOLDER = "Disabled";
+
 		public interface InstallationPathListener
 		{
 			bool IsInstallationPath(string path);
@@ -21,8 +27,8 @@ namespace ModInstaller
 		{
 			ModEntry Register(ModEntry entry);
 
-			// Should return true if the caller did the download itself, or false if it didn't.
-			bool Download(Uri uri, string path, string name);
+			// Should return NULL if the caller did the download itself, or a listener if it didn't (and so we download it ourselves)
+			DownloadProgressListener Download(Uri uri, string path, string name);
 
 			void InstalledWithSuccess(ModEntry entry);
 			void UninstalledWithSuccess(ModEntry entry);
@@ -84,22 +90,22 @@ namespace ModInstaller
 
 		#region Initialization and Self Update.
 
-		public void CheckUpdate()
+		public void CheckUpdate(InstallResultListener callback)
 		{
 			string dir = AppDomain.CurrentDomain.BaseDirectory;
 			string file = Path.GetFileName(Assembly.GetEntryAssembly()?.Location);
 
-			if (File.Exists($"{dir}/lol.exe"))
-				File.Delete($"{dir}/lol.exe");
-
-			if (File.Exists($"{dir}/AU.exe"))
-				File.Delete($"{dir}/AU.exe");
+			Util.FileDeleteSafely($"{dir}/lol.exe");
+			Util.FileDeleteSafely($"{dir}/AU.exe");
 
 			// If the SHA1s are non-equal, update.
 			if (null == this.installer || Util.SHA1Equals($"{dir}/{file}", installer.Sha1)) return;
 
-			Util.DownloadFile(this.installer, dir);
+			Util.Download(this.installer, dir, callback);
 			Util.Execute(this.installer, dir, file);
+
+			File.Delete($"{dir}/package.zip");
+			File.Delete($"{dir}/ModInstallerAutoUpdater.exe");
 		}
 
 		public void SetInstallationPath(string selectedPath)
@@ -108,8 +114,7 @@ namespace ModInstaller
 			this.settings.APIFolder = this.OSPath;
 			this.settings.modFolder = $"{this.settings.APIFolder}/Mods";
 			this.settings.Save();
-			if (!Directory.Exists(this.settings.modFolder))
-				Directory.CreateDirectory(this.settings.modFolder);
+			Util.DirectoryCreateSafely(this.settings.modFolder);
 		}
 
 		private void FillDefaultPaths()
@@ -176,15 +181,16 @@ namespace ModInstaller
 			this.settings.installFolder = path;
 			this.settings.APIFolder = OSPath;
 			this.settings.modFolder = $"{this.settings.APIFolder}/Mods";
-			if (!Directory.Exists(this.settings.modFolder))
-			{
-				Directory.CreateDirectory(this.settings.modFolder);
-			}
+			Util.DirectoryCreateSafely(this.settings.modFolder);
 			this.settings.Save();
 		}
 
 		public void PiracyCheck()
-		{
+		{	// Note: This check is way too simplist, and prone to false positives.
+			// On most countries, refusing to work alleging piracy when the user legitimily
+			// owns the software is an invitation to legal hell.
+			// So I'm deactivating it.
+		#if CHECK_PIRACY
 			if
 			(
 				OS != "Windows"
@@ -193,8 +199,14 @@ namespace ModInstaller
 			)
 				return;
 
-			Util.Open(WebStore);
+			OpenStore();
 			throw new VerificationException("Please purchase the game before attempting to play it.");
+		#endif
+		}
+
+		public void OpenStore()
+		{
+			Util.Open(WebStore);
 		}
 
 		public bool CheckApiInstalled(InstallResultListener callback)
@@ -208,9 +220,9 @@ namespace ModInstaller
 			}
 
 			// Check if either API is installed or if vanilla dll still exists
-			if (File.Exists($"{this.settings.APIFolder}/Assembly-CSharp.dll"))
+			if (File.Exists($"{this.settings.APIFolder}/{ASSEMBLY_DLL}"))
 			{
-				byte[] bytes = File.ReadAllBytes($"{this.settings.APIFolder}/Assembly-CSharp.dll");
+				byte[] bytes = File.ReadAllBytes($"{this.settings.APIFolder}/{ASSEMBLY_DLL}");
 				Assembly asm = Assembly.Load(bytes);
 
 				Type[] types;
@@ -227,9 +239,9 @@ namespace ModInstaller
 
 				this.AssemblyIsAPI = nonNullTypes.Any(type => type.Name.Contains("CanvasUtil"));
 
-				this.ApiIsInstalled = this.AssemblyIsAPI || File.Exists($"{this.settings.APIFolder}/Assembly-CSharp.mod");
+				this.ApiIsInstalled = this.AssemblyIsAPI || File.Exists($"{this.settings.APIFolder}/{ASSEMBLY_MOD}");
 
-				if (!File.Exists($"{this.settings.APIFolder}/Assembly-CSharp.vanilla")
+				if (!File.Exists($"{this.settings.APIFolder}/{ASSEMBLY_VANILLA}")
 					&& !this.ApiIsInstalled
 					&& (!nonNullTypes.Any(type => type.Name.Contains("Constant"))
 						|| (string)nonNullTypes
@@ -248,21 +260,16 @@ namespace ModInstaller
 				throw new VerificationException("Unable to locate game files.\nPlease make sure the game is installed and then try again.");
 			}
 
-			if (!this.ApiIsInstalled || this.AssemblyIsAPI && !Util.SHA1Equals($"{this.settings.APIFolder}/Assembly-CSharp.dll", this.api.Sha1))
+			if (!this.ApiIsInstalled || this.AssemblyIsAPI && !Util.SHA1Equals($"{this.settings.APIFolder}/{ASSEMBLY_DLL}", this.api.Sha1))
 			{
-				if (!callback.Download (
-						new Uri(this.api.Link),
-						$"{this.settings.installFolder}/Modding API.zip",
-						"Modding API"
-					))
-					Util.DownloadFile(this.api, this.settings.installFolder);
+				Util.Download(this.api, this.settings.installFolder, callback);
 
 				InstallApi
 				(
-					$"{this.settings.installFolder}/Modding API.zip",
+					$"{this.settings.installFolder}/package.zip",
 					this.settings.temp
 				);
-				File.Delete($"{this.settings.installFolder}/Modding API.zip");
+				File.Delete($"{this.settings.installFolder}/package.zip");
 				return true;
 			}
 			return false;
@@ -273,10 +280,9 @@ namespace ModInstaller
 			DirectoryInfo modsFolder = new DirectoryInfo(this.settings.modFolder);
 			FileInfo[] modsFiles = modsFolder.GetFiles("*.dll");
 
-			if (!Directory.Exists($"{this.settings.modFolder}/Disabled"))
-				Directory.CreateDirectory($"{this.settings.modFolder}/Disabled");
+			Util.DirectoryCreateSafely($"{this.settings.modFolder}/{DISABLED_FOLDER}");
 
-			DirectoryInfo disabledFolder = new DirectoryInfo($"{this.settings.modFolder}/Disabled");
+			DirectoryInfo disabledFolder = new DirectoryInfo($"{this.settings.modFolder}/{DISABLED_FOLDER}");
 			FileInfo[] disabledFiles = disabledFolder.GetFiles("*.dll");
 
 			foreach (FileInfo modsFile in modsFiles)
@@ -387,12 +393,7 @@ namespace ModInstaller
 		{
 			if (Directory.Exists("/tmp"))
 			{
-				if (Directory.Exists("/tmp/HKmodinstaller"))
-				{
-					Util.DeleteDirectory("/tmp/HKmodinstaller");
-				}
-
-				Directory.CreateDirectory("/tmp/HKmodinstaller");
+				Util.DirectoryRecreate("/tmp/HKmodinstaller");
 				this.settings.temp = "/tmp/HKmodinstaller";
 			}
 			else
@@ -414,12 +415,7 @@ namespace ModInstaller
 			// 2) /tmp is usually on a ramdisk. Less disk writing is always better.
 			if (Directory.Exists($"{d}tmp"))
 			{
-				if (Directory.Exists($"{d}tmp/HKmodinstaller"))
-				{
-					Util.DeleteDirectory($"{d}tmp/HKmodinstaller");
-				}
-
-				Directory.CreateDirectory($"{d}tmp/HKmodinstaller");
+				Util.DirectoryRecreate($"{d}tmp/HKmodinstaller");
 				this.settings.temp = $"{d}tmp/HKmodinstaller";
 			}
 			else
@@ -459,12 +455,13 @@ namespace ModInstaller
 			Mod mod = this.modsList.First(m => m.Name == entry.Name);
 			if (isInstall)
 			{
-				if (!callback.Download(
+				DownloadProgressListener listener = callback.Download(
 					new Uri(mod.Link),
 					$"{this.settings.modFolder}/{mod.Name}.zip",
 					mod.Name
-				))
-					Util.Download(mod, this.settings.modFolder);
+				);
+				if (null != listener)
+					Util.Download(mod, this.settings.modFolder, callback);
 
 				InstallMods
 				(
@@ -482,27 +479,16 @@ namespace ModInstaller
 				string readmeModPathMd = $"{readmeModPathNoExtension}.md";
 
 				foreach (string s in mod.Files.Keys)
-				{
-					if (File.Exists($"{this.settings.modFolder}/{s}"))
-					{
-						File.Delete($"{this.settings.modFolder}/{s}");
-					}
-				}
+					Util.FileDeleteSafely($"{this.settings.modFolder}/{s}");
 
 				foreach (string directory in Directory.EnumerateDirectories(this.settings.modFolder))
 				{
-					if (!Directory.EnumerateFileSystemEntries(directory).Any() && directory != "Disabled")
+					if (!Directory.EnumerateFileSystemEntries(directory).Any() && directory != DISABLED_FOLDER)
 						Directory.Delete(directory);
 				}
 
-				if (File.Exists(readmeModPathTxt))
-				{
-					File.Delete(readmeModPathTxt);
-				}
-				else if (File.Exists(readmeModPathMd))
-				{
-					File.Delete(readmeModPathMd);
-				}
+				Util.FileDeleteSafely(readmeModPathTxt);
+				Util.FileDeleteSafely(readmeModPathMd);
 
 				this.InstalledMods.Remove(mod.Name);
 			}
@@ -577,30 +563,24 @@ namespace ModInstaller
 											  .Files.Keys
 											  .Where(f => Path.GetExtension(f) == ".dll"))
 				{
-					if (!File.Exists($"{this.settings.modFolder}/Disabled/{s}")) continue;
-					if (File.Exists($"{this.settings.modFolder}/{s}"))
-					{
-						File.Delete($"{this.settings.modFolder}/{s}");
-					}
+					if (!File.Exists($"{this.settings.modFolder}/{DISABLED_FOLDER}/{s}")) continue;
+					Util.FileDeleteSafely($"{this.settings.modFolder}/{s}");
 
 					File.Move
 					(
-						$"{this.settings.modFolder}/Disabled/{s}",
+						$"{this.settings.modFolder}/{DISABLED_FOLDER}/{s}",
 						$"{this.settings.modFolder}/{s}"
 					);
 				}
 			}
 			else
 			{
-				if (!File.Exists($"{this.settings.modFolder}/Disabled/{modName}")) return;
-				if (File.Exists($"{this.settings.modFolder}/{modName}"))
-				{
-					File.Delete($"{this.settings.modFolder}/{modName}");
-				}
+				if (!File.Exists($"{this.settings.modFolder}/{DISABLED_FOLDER}/{modName}")) return;
+				Util.FileDeleteSafely($"{this.settings.modFolder}/{modName}");
 
 				File.Move
 				(
-					$"{this.settings.modFolder}/Disabled/{modName}",
+					$"{this.settings.modFolder}/{DISABLED_FOLDER}/{modName}",
 					$"{this.settings.modFolder}/{modName}"
 				);
 			}
@@ -618,30 +598,24 @@ namespace ModInstaller
 											  .Where(f => Path.GetExtension(f) == ".dll"))
 				{
 					if (!File.Exists($"{this.settings.modFolder}/{s}")) continue;
-					if (File.Exists($"{this.settings.modFolder}/Disabled/{s}"))
-					{
-						File.Delete($"{this.settings.modFolder}/Disabled/{s}");
-					}
+					Util.FileDeleteSafely($"{this.settings.modFolder}/{DISABLED_FOLDER}/{s}");
 
 					File.Move
 					(
 						$"{this.settings.modFolder}/{s}",
-						$"{this.settings.modFolder}/Disabled/{s}"
+						$"{this.settings.modFolder}/{DISABLED_FOLDER}/{s}"
 					);
 				}
 			}
 			else
 			{
 				if (!File.Exists($"{this.settings.modFolder}/{modName}")) return;
-				if (File.Exists($"{this.settings.modFolder}/Disabled/{modName}"))
-				{
-					File.Delete($"{this.settings.modFolder}/Disabled/{modName}");
-				}
+				Util.FileDeleteSafely($"{this.settings.modFolder}/{DISABLED_FOLDER}/{modName}");
 
 				File.Move
 				(
 					$"{this.settings.modFolder}/{modName}",
-					$"{this.settings.modFolder}/Disabled/{modName}"
+					$"{this.settings.modFolder}/{DISABLED_FOLDER}/{modName}"
 				);
 			}
 		}
@@ -652,9 +626,9 @@ namespace ModInstaller
 		{
 			// Check if first time installation.
 			// If an accident happens below, we can have an inconsistency between .dll, .vanilla and .mod.
-			// The .bkp ensures us we will always have a printine DLL to restart over.
+			// The .bkp ensures us we will always have a pristine DLL to restart over.
 			// (yeah, I messed up my game - this is why I'm working on this now! =] )
-			if (!File.Exists($"{this.settings.APIFolder}/Assembly-CSharp.dll.bkp"))
+			if (!File.Exists($"{this.settings.APIFolder}/{ASSEMBLY_DLL}"))
 			{
 				if (!this.vanilla.IsEnabled) throw new InvalidOperationException(
 					"The Assembly-CSharp.dll is not the original and no backup was found. Your installment is inconsistent.\n"
@@ -662,32 +636,29 @@ namespace ModInstaller
 				);
 				File.Copy
 				(
-					$"{this.settings.APIFolder}/Assembly-CSharp.dll",
-					$"{this.settings.APIFolder}/Assembly-CSharp.bkp",
+					$"{this.settings.APIFolder}/{ASSEMBLY_DLL}",
+					$"{this.settings.APIFolder}/{ASSEMBLY_BKP}",
+					false
+				);
+				File.Copy
+				(
+					$"{this.settings.APIFolder}/{ASSEMBLY_DLL}",
+					$"{this.settings.APIFolder}/{ASSEMBLY_VANILLA}",
 					false
 				);
 			}
-			{
-				FastZip zipFile = new FastZip();
-				zipFile.ExtractZip(api, tempFolder, "*");
-			}
+
+			Util.Unzip(api, tempFolder);
+
 			IEnumerable<string> mods = Directory.EnumerateDirectories(tempFolder).ToList();
 			IEnumerable<string> files = Directory.EnumerateFiles(tempFolder).ToList();
-			if (this.AssemblyIsAPI)
-			{
-				File.Copy
-				(
-					$"{this.settings.APIFolder}/Assembly-CSharp.dll",
-					$"{this.settings.APIFolder}/Assembly-CSharp.vanilla",
-					true
-				);
-			}
 
 			if (!files.Any(f => f.Contains(".dll")))
 			{
 				string[] modDll = Directory.GetFiles(tempFolder, "*.dll", SearchOption.AllDirectories);
 				foreach (string dll in modDll)
 					File.Copy(dll, $"{this.settings.APIFolder}/{Path.GetFileName(dll)}", true);
+
 				foreach (string mod in mods)
 				{
 					string[] dll = Directory.GetFiles(mod, "*.dll", SearchOption.AllDirectories);
@@ -729,20 +700,21 @@ namespace ModInstaller
 			}
 
 			this.ApiIsInstalled = true;
+			File.Copy
+			(
+				$"{this.settings.APIFolder}/{ASSEMBLY_DLL}",
+				$"{this.settings.APIFolder}/{ASSEMBLY_MOD}",
+				false
+			);
 			this.settings.Save();
 		}
 
 		public void InstallMods(string mod, string tempFolder, bool isEnabled)
 		{
-			if (Directory.Exists(this.settings.temp))
-				Directory.Delete(tempFolder, true);
-			if (!Directory.Exists(this.settings.modFolder))
-				Directory.CreateDirectory(this.settings.modFolder);
+			Util.DirectoryDeleteSafely(this.settings.temp);
+			Util.DirectoryCreateSafely(this.settings.modFolder);
 
-			{
-				FastZip zipFile = new FastZip();
-				zipFile.ExtractZip(mod, tempFolder, "*");
-			}
+			Util.Unzip(mod, tempFolder);
 
 			List<string> files = Directory.EnumerateFiles(tempFolder, "*", SearchOption.AllDirectories).ToList();
 
@@ -756,7 +728,7 @@ namespace ModInstaller
 							file,
 							isEnabled
 								? $"{this.settings.modFolder}/{Path.GetFileName(file)}"
-								: $"{this.settings.modFolder}/Disabled/{Path.GetFileName(file)}",
+								: $"{this.settings.modFolder}/{DISABLED_FOLDER}/{Path.GetFileName(file)}",
 							true
 						);
 						break;
@@ -778,15 +750,13 @@ namespace ModInstaller
 											  this.settings.temp,
 											  this.settings.installFolder
 										  );
-						if (!Directory.Exists(path))
-							if (path != null)
-								Directory.CreateDirectory(path);
+						if (path != null) Util.DirectoryCreateSafely(path);
 						File.Copy(file, $"{path}/{Path.GetFileName(file)}", true);
 						break;
 				}
 			}
 
-			Directory.Delete(tempFolder, true);
+			Util.DirectoryDeleteSafely(tempFolder);
 
 			this.installedMods.Add(mod);
 		}
@@ -797,55 +767,39 @@ namespace ModInstaller
 
 		public bool SetVanillaApi()
 		{
-			if (File.Exists($"{this.settings.APIFolder}/Assembly-CSharp.vanilla"))
-			{
-				File.Copy
-				(
-					$"{this.settings.APIFolder}/Assembly-CSharp.dll",
-					$"{this.settings.APIFolder}/Assembly-CSharp.mod",
-					true
-				);
-				File.Copy
-				(
-					$"{this.settings.APIFolder}/Assembly-CSharp.vanilla",
-					$"{this.settings.APIFolder}/Assembly-CSharp.dll",
-					true
-				);
-				return true;
-			}
-			return false;
+			if (!File.Exists($"{this.settings.APIFolder}/{ASSEMBLY_VANILLA}")) return false;
+
+			File.Copy
+			(
+				$"{this.settings.APIFolder}/{ASSEMBLY_VANILLA}",
+				$"{this.settings.APIFolder}/{ASSEMBLY_DLL}",
+				true
+			);
+			return true;
 		}
 
 		public bool SetCustomApi()
 		{
-			if (File.Exists($"{this.settings.APIFolder}/Assembly-CSharp.mod"))
-			{
-				File.Copy
-				(
-					$"{this.settings.APIFolder}/Assembly-CSharp.dll",
-					$"{this.settings.APIFolder}/Assembly-CSharp.vanilla",
-					true
-				);
-				File.Copy
-				(
-					$"{this.settings.APIFolder}/Assembly-CSharp.mod",
-					$"{this.settings.APIFolder}/Assembly-CSharp.dll",
-					true
-				);
-				return true;
-			}
-			return false;
+			if (!File.Exists($"{this.settings.APIFolder}/{ASSEMBLY_MOD}")) return false;
+
+			File.Copy
+			(
+				$"{this.settings.APIFolder}/{ASSEMBLY_MOD}",
+				$"{this.settings.APIFolder}/{ASSEMBLY_DLL}",
+				true
+			);
+			return true;
 		}
 
  		public bool PathCheck(string path)
 		{
 			return _OS == "MacOS"
 				? File.Exists
-				(
-					path + "/Contents/Resources/Data/Managed/Assembly-CSharp.dll"
-				)
-				&& new[] { "hollow_knight.app", "Hollow Knight.app" }.Contains(Path.GetFileName(path))
-				: File.Exists(path + "/hollow_knight_Data/Managed/Assembly-CSharp.dll");
+					(
+						path + $"/Contents/Resources/Data/Managed/{ASSEMBLY_DLL}"
+					)
+					&& new[] { "hollow_knight.app", "Hollow Knight.app" }.Contains(Path.GetFileName(path))
+				: File.Exists(path + $"/hollow_knight_Data/Managed/{ASSEMBLY_DLL}");
 		}
 	}
 }

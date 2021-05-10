@@ -68,7 +68,7 @@ namespace ModInstaller.FormsUI
             try
             {
             #if !DEBUG
-                Manager.Instance.CheckUpdate();
+                Manager.Instance.CheckUpdate(this);
             #endif
             }
             catch (Exception)
@@ -433,11 +433,11 @@ namespace ModInstaller.FormsUI
 			return entry;
 		}
 
-		bool MI.Manager.InstallResultListener.Download(Uri uri, string path, string name)
+		MI.DownloadProgressListener MI.Manager.InstallResultListener.Download(Uri uri, string path, string name)
 		{
 			DownloadHelper download = new DownloadHelper(uri, path, name);
 			download.ShowDialog();
-            return true;
+            return download;
 		}
 	}
 }

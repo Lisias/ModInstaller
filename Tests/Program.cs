@@ -56,9 +56,9 @@ namespace Tests
 
 	class InstallResultListener : Manager.InstallResultListener
 	{
-		bool Manager.InstallResultListener.Download(Uri uri, string path, string name)
+		DownloadProgressListener Manager.InstallResultListener.Download(Uri uri, string path, string name)
 		{
-			return false; // Let's the Manager do all the heavy lifting.
+			return new DownloadProgress(name); // Let's Manager do all the heavy lifting.
 		}
 
 		void Manager.InstallResultListener.InstalledWithSuccess(ModEntry entry)
@@ -80,6 +80,36 @@ namespace Tests
 		void Manager.InstallResultListener.UpdatedWithSuccess(ModEntry entry)
 		{
 			Console.WriteLine(string.Format("{0} was *UPDATED* with success.", entry.Name));
+		}
+	}
+
+	class DownloadProgress : DownloadProgressListener
+	{
+		private readonly string name;
+
+		public DownloadProgress(string name)
+		{
+			this.name = name;
+		}
+
+		void DownloadProgressListener.Aborted(Exception e)
+		{
+			Console.WriteLine(string.Format("Download for {0} was *ABORTED* due {1}!", this.name, e.Message));
+		}
+
+		void DownloadProgressListener.Cancelled()
+		{
+			Console.WriteLine(string.Format("Download for {0} was *CANCELED*!", this.name));
+		}
+
+		void DownloadProgressListener.Completed(long sizeInBytes, long timeInMilliseconds)
+		{
+			Console.WriteLine(string.Format("Download for {0} was *COMPLETED* in {1} secs with {2} Kb.", this.name, timeInMilliseconds/1000, sizeInBytes/1024));
+		}
+
+		void DownloadProgressListener.Progress(long bytesReceived, long totalBytesToReceive, long elapsedMilliseconds)
+		{
+			Console.WriteLine(string.Format("Downloading {0} : {1:0.00}% at {2:0.000}", this.name, bytesReceived/totalBytesToReceive, elapsedMilliseconds/1000));
 		}
 	}
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
@@ -7,6 +8,8 @@ using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+
+using ICSharpCode.SharpZipLib.Zip;
 
 namespace ModInstaller
 {
@@ -60,6 +63,22 @@ namespace ModInstaller
 			Directory.Delete(targetDir, false);
 		}
 
+		internal static void DirectoryDeleteSafely(string victim)
+		{
+			if (Directory.Exists(victim)) DeleteDirectory(victim);
+		}
+
+		internal static void DirectoryCreateSafely(string pathname)
+		{
+			if (!Directory.Exists(pathname)) Directory.CreateDirectory(pathname);
+		}
+
+		internal static void DirectoryRecreate(string victim)
+		{
+			if (Directory.Exists(victim)) DeleteDirectory(victim);
+			Directory.CreateDirectory(victim);
+		}
+
 		internal static void MoveDirectory(string source, string target)
 		{
 			string sourcePath = source.TrimEnd('\\', ' ');
@@ -102,52 +121,71 @@ namespace ModInstaller
 			Directory.Delete(source, true);
 		}
 
-		internal static void DownloadFile(Installer installer, string targetDir)
+		internal static void FileDeleteSafely(string victim)
 		{
-			WebClient dl = new WebClient();
-			dl.DownloadFile
-			(
-				new Uri
-				(
-					installer?.AULink ?? throw new NoNullAllowedException("AULink Missing!")
-				),
-				$"{targetDir}/AU.exe"
-			);
+			if (File.Exists(victim)) File.Delete(victim);
 		}
 
-		internal static void DownloadFile(Api api, string targetDir)
+		internal static void Download(Installer installer, string targetDir, Manager.InstallResultListener callback)
 		{
-			WebClient dl = new WebClient();
-			dl.DownloadFile
-			(
-				new Uri
-				(
-					api?.Link ?? throw new NoNullAllowedException("Link Missing!")
-				),
-				$"{targetDir}/Modding API.zip"
-			);
+			Uri uri = new Uri(installer?.AULink ?? throw new NoNullAllowedException("AULink Missing!"));
+			string pathname = $"{targetDir}/package.zip";
+			DownloadProgressListener listener = callback.Download (
+					uri,
+					pathname,
+					"Modding API"
+				);
+			if (null != listener)
+				new DownloadFile(
+					uri
+					, pathname
+					, listener
+				).Do();
 		}
 
-		internal static void Download(Mod mod, string targetDir)
+		internal static void Download(Api api, string targetDir, Manager.InstallResultListener callback)
 		{
-			WebClient dl = new WebClient();
-			dl.DownloadFile
-			(
-				new Uri
-				(
-					mod.Link ?? throw new NoNullAllowedException("Link Missing!")
-				),
-				$"{targetDir}/{mod.Name}.zip"
-			);
+			Uri uri = new Uri(api.Link ?? throw new NoNullAllowedException("Link Missing!"));
+			string pathname = $"{targetDir}/Modding API.zip";
+			DownloadProgressListener listener = callback.Download (
+					uri,
+					pathname,
+					"Modding API.zip"
+				);
+			if (null != listener)
+				new DownloadFile(
+					uri
+					, pathname
+					, listener
+			).Do();
+		}
+
+		internal static void Download(Mod mod, string targetDir, Manager.InstallResultListener callback)
+		{
+			Uri uri = new Uri(mod.Link ?? throw new NoNullAllowedException("Link Missing!"));
+			string pathname = $"{targetDir}/{mod.Name}.zip";
+
+			DownloadProgressListener listener = callback.Download (
+					uri,
+					pathname,
+					$"{mod.Name}.zip"
+				);
+			if (null != listener)
+				new DownloadFile(
+					uri
+					, pathname
+					, listener
+			).Do();
 		}
 
 		internal static void Execute(Installer installer, string dir, string file)
 		{
+			Unzip($"{dir}/package.zip", dir);
 			Process process = new Process
 			{
 				StartInfo =
 				{
-					FileName = $"{dir}/AU.exe",
+					FileName = $"{dir}/ModInstallerAutoUpdater.exe",
 					Arguments = $"\"{dir}\" {installer.Link} {file}"
 				}
 			};
@@ -159,5 +197,52 @@ namespace ModInstaller
 			Process.Start(path);
 		}
 
+		internal static void Unzip(string pathname, string target)
+		{
+			FastZip zipFile = new FastZip();
+			zipFile.ExtractZip(pathname, target, "*");
+		}
+	}
+
+	internal class DownloadFile
+	{
+		private readonly Uri uri;
+		private readonly string path;
+		private readonly DownloadProgressListener listener;
+
+		private readonly Stopwatch sw = new Stopwatch();
+		private long size = 0;
+
+		internal DownloadFile(Uri uri, string path, DownloadProgressListener listener)
+		{
+			this.uri = uri;
+			this.path = path;
+			this.listener = listener;
+		}
+
+		internal void Do()
+		{
+			this.sw.Reset();
+			this.sw.Start();
+			using (WebClient dl = new WebClient())
+			{
+				dl.DownloadProgressChanged += this.DownloadProgressChangedHandler;
+				dl.DownloadFileCompleted += this.DownloadFileCompletedHandler;
+				dl.DownloadFileAsync(uri, path);
+			}
+		}
+
+		private void DownloadFileCompletedHandler(object sender, AsyncCompletedEventArgs e)
+		{
+			this.sw.Stop();
+			if (e.Cancelled) this.listener.Cancelled();
+			if (null != e.Error) this.listener.Aborted(e.Error);
+			this.listener.Completed(this.size, this.sw.ElapsedMilliseconds);
+		}
+
+		private void DownloadProgressChangedHandler(object sender, DownloadProgressChangedEventArgs e)
+		{
+			this.listener.Progress(e.BytesReceived, e.TotalBytesToReceive, this.sw.ElapsedMilliseconds);
+		}
 	}
 }
