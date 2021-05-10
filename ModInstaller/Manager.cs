@@ -137,6 +137,10 @@ namespace ModInstaller
 				case "MacOS":
 					//Default steam installation path for Mac.
 					this.defaultPaths.Add(Environment.GetEnvironmentVariable("HOME") + "/Library/Application Support/Steam/steamapps/common/Hollow Knight/hollow_knight.app");
+					this.defaultPaths.Add(Environment.GetEnvironmentVariable("HOME") + "/Library/Application Support/GOG.com/Galaxy/Games/Hollow Knight.app");
+					// Where I store GOG games on my rig
+					this.defaultPaths.Add(Environment.GetEnvironmentVariable("HOME") + "/Applications/Games/Steam/Hollow Knight.app");
+					this.defaultPaths.Add(Environment.GetEnvironmentVariable("HOME") + "/Applications/Games/GOG/Hollow Knight.app");
 					break;
 			}
 		}
