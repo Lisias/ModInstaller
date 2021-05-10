@@ -16,6 +16,7 @@ namespace ModInstaller
 		private const string ASSEMBLY_MOD = "Assembly-CSharp.mod";
 		private const string ASSEMBLY_VANILLA = "Assembly-CSharp.vanilla";
 		private const string DISABLED_FOLDER = "Disabled";
+		private const string MODS_FOLDER = "Mods";
 
 		public interface InstallationPathListener
 		{
@@ -36,14 +37,16 @@ namespace ModInstaller
 		}
 
 		//private const string WebStore = "https://store.steampowered.com/app/367520/Hollow_Knight/";
-		private const string WebStore = "https://www.gog.com/game/hollow_knight/"; // I prefer GOG! :)
+		//private const string WebStore = "https://www.humblebundle.com/store/hollow-knight"; // Available on Humble Store too!
+		//private const string WebStore = "https://www.gog.com/game/hollow_knight/"; // I prefer GOG! :)
+		private const string WebStore = "https://www.hollowknight.com"; // Aw, screwit. Let the user decide!
 
 		//private const string ModLinks = "https://raw.githubusercontent.com/Ayugradow/ModInstaller/master/modlinks.xml";
 		//private const string ModLinks = "https://raw.githubusercontent.com/net-lisias-hk/ModInstaller/master/modlinks.xml";
 		private const string ModLinks = "file:///Users/lisias/Workspaces/HollowKnight/ModInstaller/modlinks.xml";
 
-		public const string Version = "v8.7.2 /L";
-		public const string Author = "Lisias";
+		public const string Version = "v9.0.0 /L";
+		public const string Author = "Lisias,Gadow";
 
 		private Installer installer;
 		private Vanilla vanilla;
@@ -112,7 +115,7 @@ namespace ModInstaller
 		{
 			this.settings.installFolder = selectedPath;
 			this.settings.APIFolder = this.OSPath;
-			this.settings.modFolder = $"{this.settings.APIFolder}/Mods";
+			this.settings.modFolder = $"{this.settings.APIFolder}/{MODS_FOLDER}";
 			this.settings.Save();
 			Util.DirectoryCreateSafely(this.settings.modFolder);
 		}
@@ -184,7 +187,7 @@ namespace ModInstaller
 		{
 			this.settings.installFolder = path;
 			this.settings.APIFolder = OSPath;
-			this.settings.modFolder = $"{this.settings.APIFolder}/Mods";
+			this.settings.modFolder = $"{this.settings.APIFolder}/{MODS_FOLDER}";
 			Util.DirectoryCreateSafely(this.settings.modFolder);
 			this.settings.Save();
 		}
