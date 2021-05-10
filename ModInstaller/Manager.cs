@@ -366,6 +366,42 @@ namespace ModInstaller
 			}
 		}
 
+		/**
+		 * This will **UNINSTALL EVERYTHING**	
+		 *
+		 * No questions asked. Use with caution.
+		 */
+		public void UninstallEverything(InstallResultListener callback)
+		{
+			if (!(File.Exists($"{this.settings.APIFolder}/{ASSEMBLY_BKP}") && Util.SHA1Equals($"{this.settings.APIFolder}/{ASSEMBLY_BKP}", this.vanilla.Sha1)))
+				throw new VerificationException(
+					"Unable to locate backup files. . Your installment is inconsistent.\n"
+					+ "Reinstall or Repair the game and try again."
+				);
+
+			{
+				string[] mods = this.InstalledMods.ToArray(); // Make a working copy, as the original will be changed by the Uninstall.
+				foreach (string mod in mods)
+				{
+					ModEntry entry = this.ModEntries.First(dep => dep.Name == mod);
+					this.Uninstall(entry, callback);
+				}
+			}
+
+			File.Copy
+			(
+				$"{this.settings.APIFolder}/{ASSEMBLY_BKP}",
+				$"{this.settings.APIFolder}/{ASSEMBLY_DLL}",
+				true
+			);
+
+			Util.DirectoryDeleteSafely(this.settings.modFolder);
+
+			Util.FileDeleteSafely($"{this.settings.APIFolder}/{ASSEMBLY_MOD}");
+			Util.FileDeleteSafely($"{this.settings.APIFolder}/{ASSEMBLY_VANILLA}");
+			Util.FileDeleteSafely($"{this.settings.APIFolder}/{ASSEMBLY_BKP}");
+		}
+
 		private void LoadModLinks()
 		{
 			XDocument modLinks = XDocument.Load(ModLinks);
