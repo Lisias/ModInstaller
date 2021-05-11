@@ -94,7 +94,7 @@ namespace ModInstaller
 			foreach (IGrouping<string, string> folder in files)
 			{
 				string targetFolder = folder.Key.Replace(sourcePath, targetPath);
-				Directory.CreateDirectory(targetFolder);
+				DirectoryRecreate(targetFolder);
 				foreach (string file in folder)
 				{
 					string targetFile = Path.Combine
@@ -102,23 +102,11 @@ namespace ModInstaller
 						targetFolder,
 						Path.GetFileName(file) ?? throw new NoNullAllowedException("File name is null!")
 					);
-					if (File.Exists(targetFile))
-					{
-						if (!File.Exists($"{targetFolder}/{Path.GetFileName(targetFile)}.vanilla"))
-						{
-							File.Move(targetFile, $"{targetFolder}/{Path.GetFileName(targetFile)}.vanilla");
-						}
-						else
-						{
-							File.Delete(targetFile);
-						}
-					}
-
 					File.Move(file, targetFile);
 				}
 			}
 
-			Directory.Delete(source, true);
+			DeleteDirectory(source);
 		}
 
 		internal static void FileDeleteSafely(string victim)
