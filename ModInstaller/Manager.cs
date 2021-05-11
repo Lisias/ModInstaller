@@ -132,6 +132,7 @@ namespace ModInstaller
 					this.defaultPaths.Add("Program Files (x86)/GOG Galaxy/Games/Hollow Knight");
 					this.defaultPaths.Add("Program Files/GOG Galaxy/Games/Hollow Knight");
 					this.defaultPaths.Add("GOG Galaxy/Games/Hollow Knight");
+					this.defaultPaths.Add("GOG Games/Hollow Knight");	// This is where it was installed under WINE on MacOS using the backup installer...
 					break;
 				case "Linux":
 					// Default steam installation path for Linux.
@@ -379,7 +380,7 @@ namespace ModInstaller
 		{
 			if (!(File.Exists($"{this.settings.APIFolder}/{ASSEMBLY_BKP}") && Util.SHA1Equals($"{this.settings.APIFolder}/{ASSEMBLY_BKP}", this.vanilla.Sha1)))
 				throw new VerificationException(
-					"Unable to locate backup files. . Your installment is inconsistent.\n"
+					"Unable to locate backup files. Your installment is inconsistent.\n"
 					+ "Reinstall or Repair the game and try again."
 				);
 
@@ -387,6 +388,7 @@ namespace ModInstaller
 				string[] mods = this.InstalledMods.ToArray(); // Make a working copy, as the original will be changed by the Uninstall.
 				foreach (string mod in mods)
 				{
+					if (this.api.Name.Equals(mod)) continue;
 					ModEntry entry = this.ModEntries.First(dep => dep.Name == mod);
 					this.Uninstall(entry, callback);
 				}
