@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Xml.Linq;
 using System.Security;
 using System.Linq;
-using System.ComponentModel;
 
 namespace ModInstaller
 {
@@ -17,6 +16,7 @@ namespace ModInstaller
 		private const string ASSEMBLY_VANILLA = "Assembly-CSharp.vanilla";
 		private const string DISABLED_FOLDER = "Disabled";
 		private const string MODS_FOLDER = "Mods";
+		private const string UNIX_TEMP_FOLDER = "/tmp/HKmodinstaller";
 
 		public interface InstallationPathListener
 		{
@@ -166,7 +166,6 @@ namespace ModInstaller
 						{
 							installFolder = p;
 							SetDefaultPath(p);
-							CheckTemporary(d.Name);
 						}
 
 						if (!string.IsNullOrEmpty(installFolder))
@@ -177,10 +176,12 @@ namespace ModInstaller
 				if (string.IsNullOrEmpty(installFolder))
 				{
 					installationPathCallback.SetInstallationPathManually();
-					SetDefaultPath(this.settings.installFolder);
-					CheckTemporary();
+					this.SetDefaultPath(this.settings.installFolder);
 				}
 			}
+
+			if (string.IsNullOrEmpty(this.settings.temp))
+				this.CheckTemporary();
 		}
 
 		private void SetDefaultPath(string path)
@@ -431,13 +432,16 @@ namespace ModInstaller
 
 	#endregion
 
-		// FIXME : This feature is duplicated below. Refactor client code and elimitante this one.
-		public void CheckTemporary()
+		private void CheckTemporary()
 		{
+			// If user is on sane operating system with a /tmp folder, put temp files here.
+			// Reasoning:
+			// 1) /tmp usually has normal user write permissions. C:\temp might not.
+			// 2) /tmp is usually on a ramdisk. Less disk writing is always better.
 			if (Directory.Exists("/tmp"))
 			{
-				Util.DirectoryRecreate("/tmp/HKmodinstaller");
-				this.settings.temp = "/tmp/HKmodinstaller";
+				Util.DirectoryRecreate(UNIX_TEMP_FOLDER);
+				this.settings.temp = UNIX_TEMP_FOLDER;
 			}
 			else
 			{
@@ -448,25 +452,6 @@ namespace ModInstaller
 			}
 
 			this.settings.Save();
-		}
-
-		internal void CheckTemporary(string d)
-		{
-			// If user is on sane operating system with a /tmp folder, put temp files here.
-			// Reasoning:
-			// 1) /tmp usually has normal user write permissions. C:\temp might not.
-			// 2) /tmp is usually on a ramdisk. Less disk writing is always better.
-			if (Directory.Exists($"{d}tmp"))
-			{
-				Util.DirectoryRecreate($"{d}tmp/HKmodinstaller");
-				this.settings.temp = $"{d}tmp/HKmodinstaller";
-			}
-			else
-			{
-				this.settings.temp = Directory.Exists($"{d}temp")
-					? $"{d}tempMods"
-					: $"{d}temp";
-			}
 		}
 
 		#region Downloading and installing

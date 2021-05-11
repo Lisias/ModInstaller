@@ -105,7 +105,6 @@ namespace ModInstaller.FormsUI
         private void ManualPathClosed(object sender, FormClosedEventArgs e)
         {
             Show();
-            Manager.Instance.CheckTemporary();
         }
 
         private void DonateButtonClick(object sender, EventArgs e)
