@@ -10,7 +10,7 @@ namespace ModInstaller
 {
 	public class Manager
 	{
-		private const string ASSEMBLY_DLL = "Assembly-CSharp.dll";
+		internal const string ASSEMBLY_DLL = "Assembly-CSharp.dll";
 		private const string ASSEMBLY_BKP = "Assembly-CSharp.bkp";
 		private const string ASSEMBLY_MOD = "Assembly-CSharp.mod";
 		private const string ASSEMBLY_VANILLA = "Assembly-CSharp.vanilla";

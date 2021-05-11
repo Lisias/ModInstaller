@@ -15,6 +15,6 @@ namespace ModInstaller
 		}
 		internal string Filename { get; private set; }
 		internal string Sha1 { get; private set; }
-		internal bool IsEnabled => !Util.SHA1Equals(this.folder + "/Assembly-CSharp.dll", Sha1);
+		internal bool IsEnabled => !Util.SHA1Equals(this.folder + $"/{Manager.ASSEMBLY_DLL}", Sha1);
 	}
 }
