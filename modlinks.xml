@@ -52,9 +52,9 @@
 				</File>
 			</Files>
 			<Link>
-				<MacOS><![CDATA[file:///Users/lisias/Workspaces/HollowKnight/HollowKnight.Modding/ModdingAPI.zip]]></MacOS>
-				<Linux><![CDATA[?????]]></Linux>
-				<Windows><![CDATA[https://drive.google.com/uc?export=download&id=1lMvPf30KGvHKcOW-q0-tQnJ_zyljmyex]]></Windows>
+				<Linux><![CDATA[file:///Users/lisias/Workspaces/net.lisias/rsync/var/ftp/net.lisias.hk/dist/ModdingAPI-1.4.3.2-Linux.zip]]></Linux>
+				<MacOS><![CDATA[file:///Users/lisias/Workspaces/net.lisias/rsync/var/ftp/net.lisias.hk/dist/ModdingAPI-1.4.3.2-MacOS.zip]]></MacOS>
+				<Windows><![CDATA[file:///Users/lisias/Workspaces/net.lisias/rsync/var/ftp/net.lisias.hk/dist/ModdingAPI-1.4.3.2-Windows.zip]]></Windows>
 			</Link>
 			<Dependencies />
 		</ModLink>
