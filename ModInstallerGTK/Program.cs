@@ -1,7 +1,7 @@
 ﻿using System;
 using Gtk;
 
-namespace ModInstallerGTK
+namespace ModInstaller.GTKUI
 {
 	class MainClass
 	{
