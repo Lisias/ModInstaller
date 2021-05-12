@@ -18,9 +18,14 @@
 <ModLinks xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<DriveLink>https://drive.google.com/drive/u/0/folders/1lnjtSYMfRe1LyA_qSq2CoXKI6NRm_I-e</DriveLink>
 	<Installer>
-		<Link><![CDATA[https://radiance.host/mods/ModInstaller.exe]]></Link>
-		<SHA1>B51FCE1DC9CF80D95BBC370C72CC80C7A711AB54</SHA1>
-		<AULink><![CDATA[https://github.com/net-lisias-hk/ModInstaller-Auto-Updater/releases/download/v1.0/ModInstallerAutoUpdater.exe]]></AULink>
+		<Link><![CDATA[https://github.com/net-lisias-hk/ModInstaller/releases/download/v2.0/ModInstallerAutoUpdater.exe]]></Link>
+		<AULink><![CDATA[https://github.com/net-lisias-hk/ModInstaller-Auto-Updater/releases/download/RELEASE%2F2.0.0.0/ModInstallerAutoUpdater.exe.zip]]></AULink>
+		<Files>
+			<File>
+				<Name>ModInstallerForms.exe</Name>
+				<SHA1></SHA1>
+			</File>
+		</Files>
 	</Installer>
 	<Vanilla>
 		<File>
