@@ -31,9 +31,9 @@
 		<File>
 			<Name>Assembly-CSharp.dll</Name>
 			<SHA1>
+				<Linux>EA605990137ADC0A8D23D5C4E8446AD7F6E2A2C8</Linux>
 				<MacOS>21A9935A81F1FCBA0D10FED51624B35C82103068</MacOS>
-				<Linux>?????</Linux>
-				<Windows>?????</Windows>
+				<Windows>424B26FB829753AE25388411118DA0AD721F0FB6</Windows>
 			</SHA1>
 		</File>
 	</Vanilla>
@@ -45,9 +45,9 @@
 					<Name>Assembly-CSharp.dll</Name>
 					<Patch>1.4.3.2</Patch>
 					<SHA1>
+						<Linux>AE753753181912F5711E727652264E31B46D64D6</Linux>
 						<MacOS>142CB98CB82809812CF451A0FC8F498CDCA80E0D</MacOS>
-						<Linux>?????</Linux>
-						<Windows>E880EA1B2B4B57FBD6ECA36B26746F08FF4EEF9F</Windows>
+						<Windows>387B8D092BE100F99A4A00D67D009A3984A309B9</Windows>
 					</SHA1>
 				</File>
 			</Files>
