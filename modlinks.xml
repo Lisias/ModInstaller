@@ -250,10 +250,10 @@
 			<Files>
 				<File>
 					<Name>WeaverCore.dll</Name>
-					<SHA1>5C6CEA3A0C988328ADD288E8411D3151089135CF</SHA1>
+					<SHA1>6989E5BAA0EAB56278E1797AC3BCA36E87544C33</SHA1>
 				</File>
 			</Files>
-			<Link><![CDATA[https://drive.google.com/uc?export=downloads&id=1hxKgCx9S3O_AAzAMjo_3IXyhakB5tkin]]></Link>
+			<Link><![CDATA[https://github.com/nickc01/WeaverCore/releases/download/v0.3.0.0-beta/WeaverCore.zip]]></Link>
 			<Dependencies>
 				<string>Modding API</string>
 			</Dependencies>
@@ -264,10 +264,25 @@
 			<Files>
 				<File>
 					<Name>InfernoKingGrimm.dll</Name>
-					<SHA1>72A933B05EA9390BCCBD87D90F7566342692EEC6</SHA1>
+					<SHA1>CC54EC1EAA29352CAEAA6B6420F461CC585FC66E</SHA1>
 				</File>
 			</Files>
-			<Link><![CDATA[https://drive.google.com/uc?export=downloads&id=1vg3NUEfjTCTaenQQf4FHlmhnjsWwYcVR]]></Link>
+			<Link><![CDATA[https://drive.google.com/uc?export=downloads&id=1dhiQsFXK40gop1onuKMFuVOndrtMOEwS]]></Link>
+			<Dependencies>
+				<string>Modding API</string>
+				<string>WeaverCore</string>
+			</Dependencies>
+		</ModLink>
+		<ModLink>
+			<Name>Corrupted Kin</Name>
+			<Description>Turns Lost Kin into a two phase boss fight and makes it harder.</Description>
+			<Files>
+				<File>
+					<Name>CorruptedKin.dll</Name>
+					<SHA1>D24E5637BA7ADF6A6691DEA6FE8CABF60157A53E</SHA1>
+				</File>
+			</Files>
+			<Link><![CDATA[https://drive.google.com/uc?export=downloads&id=17IilGkETjlVVK4JGC0dC3-HzTVBYKdXN]]></Link>
 			<Dependencies>
 				<string>Modding API</string>
 				<string>WeaverCore</string>
@@ -734,14 +749,14 @@
 			<Files>
 				<File>
 					<Name>PlayerDataDump.dll</Name>
-					<SHA1>5397d73f1fd4afa3061d20d29a6cc89cff9883f2</SHA1>
+					<SHA1>3C31332B324ADAF32A6D8C3DA3F188A58E2DF4C7</SHA1>
 				</File>
 				<File>
 					<Name>websocket-sharp.dll</Name>
 					<SHA1>998550d8bd5d050a8a45679324bce9cbbfff0b6c</SHA1>
 				</File>
 			</Files>
-			<Link><![CDATA[https://drive.google.com/uc?export=download&id=10NBvn-wOVYTWQEBRu-QqXcUHIjpm2QGX]]></Link>
+			<Link><![CDATA[https://drive.google.com/uc?export=download&id=1sU7olevHbe3yXtOv9dUTVqXmYo6wjMUg]]></Link>
 			<Dependencies>
 				<string>Modding API</string>
 			</Dependencies>
@@ -840,10 +855,10 @@
 			<Files>
 				<File>
 					<Name>Benchwarp.dll</Name>
-					<SHA1>60CB50E8C2F9EB7756410EFF48A3C4FD6DD3C264</SHA1>
+					<SHA1>F80B83F8A3A8D77843D691C422A1C450E3653B83</SHA1>
 				</File>
 			</Files>
-			<Link><![CDATA[https://github.com/homothetyhk/HollowKnight.BenchwarpMod/releases/download/v2.3DW/Benchwarp.zip]]></Link>
+			<Link><![CDATA[https://github.com/homothetyhk/HollowKnight.BenchwarpMod/releases/latest/download/Benchwarp.zip]]></Link>
 			<Dependencies>
 				<string>Modding API</string>
 			</Dependencies>
@@ -884,10 +899,10 @@
 			<Files>
 				<File>
 					<Name>RandomizerMod3.0.dll</Name>
-					<SHA1>03712079173145904B93CCD581AFBBF0CCB03C35</SHA1>
+					<SHA1>2EAB88DA8A07FE4A2B856CB3BEA3A227A5B2CC8C</SHA1>
 				</File>
 			</Files>
-			<Link><![CDATA[https://github.com/homothetyhk/HollowKnight.RandomizerMod/releases/download/v3.11(186)/RandomizerMod3.0.zip]]></Link>
+			<Link><![CDATA[https://github.com/homothetyhk/HollowKnight.RandomizerMod/releases/latest/download/RandomizerMod3.0.zip]]></Link>
 			<Dependencies>
 				<string>Modding API</string>
 				<string>SereCore</string>
@@ -904,7 +919,7 @@
 					<SHA1>ABEFE12B66226C3C9A7A80A1C16917EE3BCA51A9</SHA1>
 				</File>
 			</Files>
-			<Link><![CDATA[https://drive.google.com/uc?export=download&id=1-rCDkRfgFCntk7ecAKo8MRpzW8FIGg63]]></Link>
+			<Link><![CDATA[https://drive.google.com/uc?export=download&id=1nbhmxf9eABEjeXZ4DEdhWuN3mVFPkS18]]></Link>
 			<Dependencies>
 				<string>Modding API</string>
 				<string>ModCommon</string>
@@ -1148,10 +1163,10 @@
 			<Files>
 				<File>
 					<Name>ItemChanger.dll</Name>
-					<SHA1>D31B5C898352F8941724AF2E401405C39420E27D</SHA1>
+					<SHA1>AEC7B22A62917CFF600EE4CD102E19B1541CBB32</SHA1>
 				</File>
 			</Files>
-			<Link><![CDATA[https://github.com/homothetyhk/HollowKnight.ItemChanger/releases/download/v1.0/ItemChanger.zip]]></Link>
+			<Link><![CDATA[https://github.com/homothetyhk/HollowKnight.ItemChanger/releases/latest/download/ItemChanger.zip]]></Link>
 			<Dependencies>
 				<string>Modding API</string>
 				<string>SereCore</string>
@@ -1250,10 +1265,10 @@
 			<Files>
 				<File>
 					<Name>SFCore.dll</Name>
-					<SHA1>45C3D385A82E7F36D38242A72A9A5748DFF7D923</SHA1>
+					<SHA1>F75504A3D4D688F9FDFD29A6FD136171B9EC0D0F</SHA1>
 				</File>
 			</Files>
-			<Link><![CDATA[https://github.com/SFGrenade/SFCore/releases/download/v1.4.3.3/SFCore.zip]]></Link>
+			<Link><![CDATA[https://github.com/SFGrenade/SFCore/releases/download/v1.4.3.4/SFCore.zip]]></Link>
 			<Dependencies>
 				<string>Modding API</string>
 			</Dependencies>
@@ -1408,17 +1423,18 @@
 			</Dependencies>
 		</ModLink>
 		<ModLink>
-			<Name>Easier P5 Practice</Name>
-			<Description>A mod that allows practice for P5 in HoG. This mod changes the health and damage of ascended bosses to match with P5 and adds the ability to remove health (for fury practice), add soul or lifeblood before each fight starts and an option for hitless practice.</Description>
+			<Name>Easier Pantheon Practice</Name>
+			<Description>A mod that makes practicing in HoG easier. It adds many features some of them include, allowing you to press a key to reload bosses much quicker, matcheing the health and damage of bosses with P5, and giving you the ability to do fury practice in HoG. There are more but you can read the readme for that :)</Description>
 			<Files>
 				<File>
-					<Name>Easier-P5-Practice.dll</Name>
-					<SHA1>832374BBC9EEC26C424940D22D75B31745AF6375</SHA1>
+					<Name>Easier-Pantheon-Practice.dll</Name>
+					<SHA1>154824A21F3FA477172C985426999762DABEE55D</SHA1>
 				</File>
 			</Files>
-			<Link><![CDATA[https://github.com/TheMulhima/Easier-P5-Practice/releases/download/v1.0.0.3/Easier-P5-Practice.zip]]></Link>
+			<Link><![CDATA[https://github.com/TheMulhima/Easier-Pantheon-Practice/releases/download/v1.0.0.6/Easier-Pantheon-Practice.zip]]></Link>
 			<Dependencies>
 				<string>Modding API</string>
+				<string>SFCore</string>
 			</Dependencies>
 		</ModLink>
 		<ModLink>
@@ -1461,7 +1477,7 @@
 					<SHA1>859A6F42DD9CF4C73BA3614E92A625766762FD4A</SHA1>
 				</File>
 			</Files>
-				<Link><![CDATA[https://github.com/KaanGaming/HollowKnightDRPC/releases/download/1.1.2Beta/HollowKnightDRPC.zip]]></Link>
+				<Link><![CDATA[https://github.com/KaanGaming/HollowKnightDRPC/releases/download/1.1.1Beta/HollowKnightDRPC.zip]]></Link>
 			<Dependencies>
 				<string>Modding API</string>
 			</Dependencies>
